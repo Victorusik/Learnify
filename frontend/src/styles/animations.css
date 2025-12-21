@@ -1,0 +1,51 @@
+/* Листание карточек - параллакс */
+.card-swipe-enter-active {
+  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-swipe-leave-active {
+  transition: transform 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.card-swipe-enter-from {
+  transform: translateX(100%);
+}
+
+.card-swipe-leave-to {
+  transform: translateX(-100%);
+}
+
+/* Ответ на вопрос */
+.answer-expand {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 300ms ease;
+}
+
+.answer-expand.expanded {
+  max-height: 500px;
+}
+
+/* Прогресс-бар */
+.progress-fill {
+  transition: width 300ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Награда с конфетти */
+@keyframes confetti {
+  0% {
+    transform: translateY(0) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+.confetti {
+  animation: confetti 2s ease-out forwards;
+}
+
+
+
