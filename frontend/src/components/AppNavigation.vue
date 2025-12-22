@@ -8,7 +8,7 @@
       <v-icon>mdi-book-open-variant</v-icon>
       <span>Обучение</span>
     </v-btn>
-    <v-btn value="training">
+    <v-btn @click="clickAciveTab" value="training">
       <v-icon>mdi-brain</v-icon>
       <span>Тренировка</span>
     </v-btn>
@@ -33,6 +33,9 @@ const router = useRouter()
 const clickAciveTab = () => {
   if (route.path === '/learning/categories') {
     router.push('/learning')
+  }
+  if (route.path.startsWith('/learning/course/')) {
+    router.push('/main')
   }
 }
 

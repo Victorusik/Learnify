@@ -3,16 +3,13 @@
     <v-card-title class="text-h6">{{ block.title }}</v-card-title>
     <v-card-text>
       <p class="text-body-1 mb-4">{{ block.content }}</p>
-      <v-card
-        v-if="block.visualization_hint"
-        variant="outlined"
-        class="pa-4 mb-4"
-        style="background-color: #f5f5f5;"
-      >
-        <p class="text-caption text-medium-emphasis">
-          {{ block.visualization_hint }}
-        </p>
-      </v-card>
+
+        <v-img
+          src="https://img.freepik.com/premium-photo/majestic-lion-wearing-elegant-crown-against-dark-background_626475-6901.jpg?semt=ais_hybrid&w=740"
+          class="mb-4"
+          max-height="300"
+          cover
+        />
     </v-card-text>
     <v-card-actions>
       <v-spacer />
