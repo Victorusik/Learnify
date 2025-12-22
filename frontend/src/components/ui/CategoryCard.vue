@@ -2,7 +2,7 @@
   <v-card
     :elevation="3"
     class="category-card"
-    :style="{ borderRadius: '12px', cursor: 'pointer' }"
+    :style="{ borderRadius: 'var(--card-border-radius)', cursor: 'pointer' }"
     @click="$emit('click')"
   >
     <v-card-text class="text-center pa-6">
@@ -33,6 +33,7 @@ defineEmits<{
   transform: translateY(-4px);
 }
 </style>
+
 
 
 

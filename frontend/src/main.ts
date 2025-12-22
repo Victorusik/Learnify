@@ -4,6 +4,7 @@ import App from './App.vue'
 import router from './router'
 import vuetify from './plugins/vuetify'
 import { useCourses } from './composables/useCourses'
+import './styles/variables.css'
 import './styles/animations.css'
 
 const app = createApp(App)

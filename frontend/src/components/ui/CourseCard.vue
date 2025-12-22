@@ -2,7 +2,7 @@
   <v-card
     :elevation="3"
     class="course-card"
-    :style="{ borderRadius: '12px' }"
+    :style="{ borderRadius: 'var(--card-border-radius)' }"
   >
     <v-img
       :src="course.cover_image_url"
@@ -76,6 +76,3 @@ const getLevelColor = (level: string) => {
   height: 100%;
 }
 </style>
-
-
-

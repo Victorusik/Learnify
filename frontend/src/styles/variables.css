@@ -1,0 +1,11 @@
+:root {
+  --primary-color: #00ab8a;
+  --card-border-radius: 12px;
+  --elevation-3: 0 3px 6px rgba(0, 0, 0, 0.16);
+  --font-family: 'Rubik', 'SF Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --heading-size: 20px;
+  --text-size: 16px;
+
+  --app-max-width: 460px;
+}
+

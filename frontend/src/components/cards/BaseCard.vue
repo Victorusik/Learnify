@@ -2,7 +2,7 @@
   <v-card
     :elevation="3"
     :class="['base-card', $attrs.class]"
-    :style="{ borderRadius: '12px' }"
+    :style="{ borderRadius: 'var(--card-border-radius)' }"
   >
     <slot />
   </v-card>
@@ -13,10 +13,7 @@
 
 <style scoped>
 .base-card {
-  border-radius: 12px;
-  box-shadow: 0 3px 6px rgba(0, 0, 0, 0.16);
+  border-radius: var(--card-border-radius);
+  box-shadow: var(--elevation-3);
 }
 </style>
-
-
-

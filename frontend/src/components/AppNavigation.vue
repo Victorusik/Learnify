@@ -3,7 +3,6 @@
     :model-value="activeTab"
     @update:model-value="navigate"
     color="primary"
-    grow
   >
     <v-btn value="learning">
       <v-icon>mdi-book-open-variant</v-icon>
@@ -57,5 +56,9 @@ const navigate = (value: string) => {
 }
 </script>
 
+<style scoped>
+
+
+</style>
 
 
