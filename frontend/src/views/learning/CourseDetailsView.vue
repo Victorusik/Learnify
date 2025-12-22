@@ -4,7 +4,7 @@
       <v-col cols="12">
         <v-img
           :src="course.cover_image_url"
-          height="300"
+          height="200"
           cover
           class="mb-4"
         />
@@ -94,6 +94,7 @@ const enroll = () => {
   router.push('/learning')
 }
 </script>
+
 
 
 

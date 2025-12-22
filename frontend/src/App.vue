@@ -12,7 +12,10 @@ import AppNavigation from './components/AppNavigation.vue'
 </script>
 
 <style>
+
+
 .v-application {
+  background-color: var(--background-color-1);
   font-family: var(--font-family) !important;
 }
 
@@ -29,7 +32,6 @@ import AppNavigation from './components/AppNavigation.vue'
 
   .v-main {
     max-width: var(--app-max-width);
-    margin: 0 auto;
   }
 }
 </style>

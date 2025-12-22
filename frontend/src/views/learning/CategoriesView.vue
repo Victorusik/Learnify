@@ -9,11 +9,12 @@
       <v-col
         v-for="category in categories"
         :key="category.id"
-        cols="6"
-        sm="6"
-        md="4"
+        cols="12"
+        md="6"
+        class="d-flex"
       >
         <CategoryCard
+          class="flex-grow-1"
           :category="category"
           @click="goToCategory(category.id)"
         />
@@ -34,6 +35,7 @@ const goToCategory = (categoryId: string) => {
   router.push(`/learning/category/${categoryId}`)
 }
 </script>
+
 
 
 

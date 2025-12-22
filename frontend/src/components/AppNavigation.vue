@@ -4,7 +4,7 @@
     @update:model-value="navigate"
     color="primary"
   >
-    <v-btn value="learning">
+    <v-btn @click="clickAciveTab" value="learning">
       <v-icon>mdi-book-open-variant</v-icon>
       <span>Обучение</span>
     </v-btn>
@@ -30,8 +30,15 @@ import { useRoute, useRouter } from 'vue-router'
 const route = useRoute()
 const router = useRouter()
 
+const clickAciveTab = () => {
+  if (route.path === '/learning/categories') {
+    router.push('/learning')
+  }
+}
+
 const activeTab = computed(() => {
-  if (route.path.startsWith('/learning')) return 'learning'
+  if (route.path === '/learning/categories') return 'learning'
+  if (route.path === '/learning') return 'learning'
   if (route.path === '/main') return 'training'
   if (route.path === '/achievements') return 'achievements'
   if (route.path === '/profile') return 'profile'

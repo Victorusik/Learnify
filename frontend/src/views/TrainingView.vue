@@ -14,7 +14,7 @@
         <v-card class="pa-4 mb-4">
           <div class="d-flex justify-space-between align-center">
             <span>Сегодня: {{ userStore.completedToday }}/{{ userStore.dailyGoal }} уроков</span>
-            <v-btn size="small" variant="text">Изменить цель</v-btn>
+                        <v-btn size="small" variant="text" @click="router.push('/profile')">Изменить цель</v-btn>
           </div>
         </v-card>
       </v-col>
@@ -65,9 +65,12 @@ import PracticeMultipleChoice from '@/components/cards/PracticeMultipleChoice.vu
 import PracticeReflection from '@/components/cards/PracticeReflection.vue'
 import PracticeCase from '@/components/cards/PracticeCase.vue'
 import PracticeTextInput from '@/components/cards/PracticeTextInput.vue'
+import { useRouter } from 'vue-router'
+
 
 const cardsStore = useCardsStore()
 const userStore = useUserStore()
+const router = useRouter()
 
 const currentCard = ref<Block | null>(null)
 
@@ -127,6 +130,7 @@ const nextCard = () => {
   }
 }
 </script>
+
 
 
 
