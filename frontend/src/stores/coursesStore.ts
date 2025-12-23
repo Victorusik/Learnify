@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
+import { ref } from 'vue'
 import type { Course, Lesson } from '@/types'
 
 export const useCoursesStore = defineStore('courses', () => {
@@ -37,7 +37,7 @@ export const useCoursesStore = defineStore('courses', () => {
     }
   }
 
-  const markBlockCompleted = (lessonId: string, blockOrder: number) => {
+  const markBlockCompleted = (lessonId: string, /* blockOrder: number */) => {
     const current = lessonsProgress.value.get(lessonId) || 0
     lessonsProgress.value.set(lessonId, current + 1)
   }

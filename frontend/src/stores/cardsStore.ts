@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import { addDays, isBefore, isAfter } from 'date-fns'
+import { ref } from 'vue'
+import { addDays, isBefore } from 'date-fns'
 import type { Block, RepetitionData } from '@/types'
 
 export const useCardsStore = defineStore('cards', () => {
