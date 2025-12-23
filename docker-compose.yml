@@ -1,23 +1,46 @@
 services:
+  postgres:
+    image: postgres:15-alpine
+    container_name: learnify-postgres
+    environment:
+      POSTGRES_DB: learnify
+      POSTGRES_USER: learnify
+      POSTGRES_PASSWORD: learnify
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U learnify -d learnify"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: learnify-backend
+    ports:
+      - "3001:3000"
+    environment:
+      DATABASE_URL: postgresql://learnify:learnify@postgres:5432/learnify
+    depends_on:
+      postgres:
+        condition: service_healthy
+
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    container_name: learnify-frontend
     ports:
       - "3000:80"
     environment:
-      - NODE_ENV=development
+      - NODE_ENV=production
     depends_on:
       - backend
 
-  backend:
-    image: node:18-alpine
-    working_dir: /app
-    volumes:
-      - ./backend:/app
-    ports:
-      - "3001:3000"
-    command: sh -c "echo 'Backend will be implemented later' && sleep infinity"
+volumes:
+  postgres_data:
 
 
 
