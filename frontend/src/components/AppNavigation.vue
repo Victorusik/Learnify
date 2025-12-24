@@ -3,12 +3,14 @@
     :model-value="activeTab"
     @update:model-value="navigate"
     color="primary"
+    class="app-navigation"
+    :elevation="0"
   >
-    <v-btn @click="clickAciveTab" value="learning">
+    <v-btn value="learning">
       <v-icon>mdi-book-open-variant</v-icon>
       <span>Обучение</span>
     </v-btn>
-    <v-btn @click="clickAciveTab" value="training">
+    <v-btn value="training">
       <v-icon>mdi-brain</v-icon>
       <span>Тренировка</span>
     </v-btn>
@@ -29,15 +31,6 @@ import { useRoute, useRouter } from 'vue-router'
 
 const route = useRoute()
 const router = useRouter()
-
-const clickAciveTab = () => {
-  if (route.path === '/learning/categories') {
-    router.push('/learning')
-  }
-  if (route.path.startsWith('/learning/course/')) {
-    router.push('/main')
-  }
-}
 
 const activeTab = computed(() => {
   if (route.path === '/learning/categories') return 'learning'
@@ -67,10 +60,20 @@ const navigate = (value: string) => {
 </script>
 
 <style scoped>
-.v-bottom-navigation .v-btn,
-.v-bottom-navigation .v-btn .v-icon,
-.v-bottom-navigation .v-btn span {
-  color: var(--muted-foreground) !important;
+.app-navigation {
+  background-color: white !important;
+  border-top: 1px solid #d7e0de;
+  box-shadow: none !important;
+}
+
+.app-navigation :deep(.v-btn) {
+  color: #9e9e9e !important;
+}
+
+.app-navigation :deep(.v-btn--active),
+.app-navigation :deep(.v-btn--active .v-icon),
+.app-navigation :deep(.v-btn--active span) {
+  color: var(--primary-color) !important;
 }
 
 @media (min-width: 600px) {

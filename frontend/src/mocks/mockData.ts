@@ -33,7 +33,7 @@ export const mockCourseData = {
       'Формирование привычки к регулярным обзорам и системному мышлению'
     ],
     prerequisites: ['Базовые знания тайм-менеджмента', 'Опыт планирования задач', 'Готовность к самоанализу и изменениям привычек'],
-    cover_image_url: 'https://example.com/covers/tm-inter-002.jpg',
+    cover_image_url: 'https://litmarket.ru/storage/books/133352_1752363280_6872f11009b73.jpg',
     promo_video_url: 'https://example.com/promo/tm-inter-002.mp4'
   } as Course,
   lessons: [

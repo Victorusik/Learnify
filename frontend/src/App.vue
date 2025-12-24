@@ -1,9 +1,9 @@
 <template>
   <v-app>
-    <v-main>
+    <v-main class="app-main">
       <router-view />
-      <AppNavigation />
     </v-main>
+    <AppNavigation />
   </v-app>
 </template>
 
@@ -12,19 +12,22 @@ import AppNavigation from './components/AppNavigation.vue'
 </script>
 
 <style>
-
 #app {
-  background-color: var(--background-color-1) !important;
+  background-color: var(--background-color-1);
 }
 
 .v-application {
-  background-color: var(--background-color-1) !important;
+  background-color: transparent;
   font-family: var(--font-family) !important;
 }
 
 .v-application,
 .v-application * {
   font-family: var(--font-family) !important;
+}
+
+.app-main {
+  background-color: var(--background-color-1);
 }
 
 @media (min-width: 600px) {

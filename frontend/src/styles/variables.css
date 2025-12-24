@@ -3,27 +3,13 @@
   --card-border-radius: 12px;
   --elevation-3: 0 3px 6px rgba(0, 0, 0, 0.16);
   --font-family: 'Rubik', 'SF Pro', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  --heading-size: 18;
+  --heading-size: 18px;
   --text-size: 16px;
 
-  --background-color-1: #fcf7f8;
+  --background-color-1: #05d0a807;
   --muted-foreground: oklch(.5 .01 240);
 
   --app-max-width: 460px;
-}
 
-
-.text-h6 {
-  font-size: var(--heading-size) !important;
-}
-
-.v-btn {
-  text-transform: none !important;
-  letter-spacing: normal !important;
-  font-weight: 400 !important;
-}
-
-.v-list-item-title {
-  font-size: var(--text-size) !important;
 }
 

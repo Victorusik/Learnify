@@ -1,32 +1,32 @@
 <template>
-  <v-container>
+  <v-container class="training-container">
+    <TrainingHeader @change-goal="router.push('/profile')" />
     <v-row>
       <v-col cols="12">
-        <v-card class="pa-4 mb-4">
-          <div class="d-flex justify-space-between align-center">
-            <div>
-              <div class="text-h6">Уровень {{ userStore.level }}</div>
-              <div class="text-caption">Стрик: {{ userStore.streak }} дней 🔥</div>
+        <v-card v-if="currentCard" class="question-card" elevation="0">
+          <div class="card-header">
+            <v-chip
+              size="small"
+              color="primary"
+              prepend-icon="mdi-lightbulb-outline"
+              class="category-chip"
+            >
+              {{ getCategoryName(currentCard) }}
+            </v-chip>
+            <div class="review-info">
+              {{ getReviewReason(currentCard) }}
             </div>
-            <div class="text-h6">Привет, {{ userStore.name }}!</div>
           </div>
-        </v-card>
-        <v-card class="pa-4 mb-4">
-          <div class="d-flex justify-space-between align-center">
-            <span>Сегодня: {{ userStore.completedToday }}/{{ userStore.dailyGoal }} уроков</span>
-                        <v-btn size="small" variant="text" @click="router.push('/profile')">Изменить цель</v-btn>
+          <div class="topic-info">
+            {{ getTopicInfo(currentCard) }}
           </div>
-        </v-card>
-      </v-col>
-    </v-row>
-    <v-row>
-      <v-col cols="12">
-        <v-card v-if="currentCard" class="pa-4">
-          <div class="d-flex justify-space-between mb-2">
-            <v-chip size="small">{{ getCategoryName(currentCard) }}</v-chip>
-            <v-chip size="small" variant="outlined">{{ getCardType(currentCard) }}</v-chip>
-          </div>
-          <div class="text-caption mb-4">{{ getReviewReason(currentCard) }}</div>
+          <v-chip
+            size="small"
+            variant="outlined"
+            class="practice-chip"
+          >
+            {{ getCardType(currentCard) }}
+          </v-chip>
           <component
             :is="getCardComponent(currentCard)"
             :block="currentCard"
@@ -39,19 +39,6 @@
         </v-card>
       </v-col>
     </v-row>
-    <v-row>
-      <v-col cols="12">
-        <v-card class="pa-4">
-          <div class="text-caption mb-2">
-            Осталось карточек: {{ cardsStore.reviewQueue.length }}
-          </div>
-          <div class="text-caption">
-            Сегодня: {{ cardsStore.todayStats.reviewed }} карточек,
-            {{ Math.round(cardsStore.todayStats.accuracy) }}% правильных
-          </div>
-        </v-card>
-      </v-col>
-    </v-row>
   </v-container>
 </template>
 
@@ -59,17 +46,20 @@
 import { ref, onMounted, computed } from 'vue'
 import { useCardsStore } from '@/stores/cardsStore'
 import { useUserStore } from '@/stores/userStore'
+import { useCoursesStore } from '@/stores/coursesStore'
 import type { Block } from '@/types'
 import TheoryCard from '@/components/cards/TheoryCard.vue'
 import PracticeMultipleChoice from '@/components/cards/PracticeMultipleChoice.vue'
 import PracticeReflection from '@/components/cards/PracticeReflection.vue'
 import PracticeCase from '@/components/cards/PracticeCase.vue'
 import PracticeTextInput from '@/components/cards/PracticeTextInput.vue'
+import TrainingHeader from '@/components/TrainingHeader.vue'
 import { useRouter } from 'vue-router'
-
+import { differenceInDays } from 'date-fns'
 
 const cardsStore = useCardsStore()
 const userStore = useUserStore()
+const coursesStore = useCoursesStore()
 const router = useRouter()
 
 const currentCard = ref<Block | null>(null)
@@ -100,21 +90,60 @@ const getCardComponent = (block: Block) => {
 }
 
 const getCategoryName = (block: Block) => {
-  return 'Наука' // TODO: получить из курса
+  const blockId = `${block.type}-${block.order}`
+  const repData = cardsStore.spacedRepetitionData.get(blockId)
+  if (repData && coursesStore.activeCourse) {
+    return coursesStore.activeCourse.category
+  }
+  return 'Наука'
 }
 
 const getCardType = (block: Block) => {
   return block.type === 'theory' ? 'Теория' : 'Практика'
 }
 
-const getReviewReason = (block: Block) => {
-  return 'Пора повторить' // TODO: получить из spaced repetition data
+const getReviewReason = (block: Block): string => {
+  const blockId = `${block.type}-${block.order}`
+  const repData = cardsStore.spacedRepetitionData.get(blockId)
+
+  if (repData && repData.lastReview) {
+    const daysAgo = differenceInDays(new Date(), repData.lastReview)
+    if (daysAgo > 0) {
+      return `Вы ошиблись здесь ${daysAgo} ${getDayWord(daysAgo)} назад`
+    }
+  }
+  return 'Пора повторить'
+}
+
+const getDayWord = (days: number): string => {
+  if (days === 1) return 'день'
+  if (days >= 2 && days <= 4) return 'дня'
+  return 'дней'
+}
+
+const getTopicInfo = (block: Block): string => {
+  const blockId = `${block.type}-${block.order}`
+  const repData = cardsStore.spacedRepetitionData.get(blockId)
+
+  if (repData && coursesStore.activeCourse) {
+    const lessons = coursesStore.getCourseLessons(repData.courseId)
+    const lesson = lessons.find(l => l.id === repData.lessonId)
+    if (lesson) {
+      return `${coursesStore.activeCourse.title} • ${lesson.title}`
+    }
+    return coursesStore.activeCourse.title
+  }
+  return 'Основы квантовой физики • Квантовая запутанность'
 }
 
 const handleAnswer = (isCorrect: boolean) => {
   if (currentCard.value) {
     const blockId = `${currentCard.value.type}-${currentCard.value.order}`
-    cardsStore.submitAnswer(blockId, isCorrect, 'lesson_1', 'TM-INTER-002')
+    const repData = cardsStore.spacedRepetitionData.get(blockId)
+    const lessonId = repData?.lessonId || 'lesson_1'
+    const courseId = repData?.courseId || 'TM-INTER-002'
+
+    cardsStore.submitAnswer(blockId, isCorrect, lessonId, courseId)
     if (isCorrect) {
       userStore.addXP(5)
     }
@@ -130,6 +159,45 @@ const nextCard = () => {
   }
 }
 </script>
+
+<style scoped>
+.training-container {
+  padding-top: 0;
+}
+
+.question-card {
+  padding: 20px;
+  border-radius: 16px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.category-chip {
+  font-weight: 500;
+}
+
+.review-info {
+  font-size: 12px;
+  color: #757575;
+  text-align: right;
+}
+
+.topic-info {
+  font-size: 14px;
+  color: #424242;
+  margin-bottom: 12px;
+  line-height: 1.4;
+}
+
+.practice-chip {
+  margin-bottom: 20px;
+}
+</style>
 
 
 

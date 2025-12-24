@@ -3,38 +3,21 @@
     <v-row>
       <v-col cols="12">
         <v-card class="pa-4 mb-4">
-          <div class="text-h5 mb-2">{{ userStore.name }} (Уровень {{ userStore.level }})</div>
-          <ProgressBar
-            :progress="userStore.xpProgress"
-            :label="`До следующего уровня: ${userStore.xpToNextLevel} XP`"
-          />
-          <div class="text-caption mt-2">Всего опыта: {{ userStore.xp }} XP</div>
-        </v-card>
-      </v-col>
-    </v-row>
-    <v-row>
-      <v-col cols="12">
-        <v-card class="pa-4 mb-4">
-          <div class="text-h6 mb-2">Стрики</div>
-          <div class="text-body-1 mb-2">Текущая серия: {{ userStore.streak }} дней 🔥</div>
-          <div class="text-caption">Рекорд: 21 день</div>
-        </v-card>
-      </v-col>
-    </v-row>
-    <v-row>
-      <v-col cols="12">
-        <v-card class="pa-4 mb-4">
-          <div class="text-h6 mb-4">Активность</div>
-          <div v-for="day in achievementsStore.weeklyActivity" :key="day.day" class="mb-2">
-            <div class="d-flex align-center">
-              <span class="mr-2" style="width: 30px;">{{ day.day }}:</span>
-              <v-progress-linear
-                :model-value="(day.lessons / 20) * 100"
-                height="20"
-                rounded
-                class="flex-grow-1"
-              />
-              <span class="ml-2">{{ day.lessons }} уроков</span>
+          <div class="d-flex align-center">
+            <CircularProgressBar
+              :progress="userStore.xpProgress"
+              :size="80"
+            />
+            <div class="user-info ml-4">
+              <div class="user-name">
+                {{ userStore.name }} (Уровень {{ userStore.level }})
+              </div>
+              <div class="user-xp mt-1">
+                Всего опыта: {{ userStore.xp }} XP
+              </div>
+              <div class="user-xp-next mt-1">
+                До следующего уровня: {{ userStore.xpToNextLevel }} XP
+              </div>
             </div>
           </div>
         </v-card>
@@ -42,36 +25,24 @@
     </v-row>
     <v-row>
       <v-col cols="12">
-        <v-card class="pa-4">
-          <div class="text-h6 mb-4">Награды</div>
-          <div class="mb-4">
-            <div class="text-subtitle-2 mb-2">Полученные ({{ unlockedCount }}):</div>
-            <div class="d-flex flex-wrap gap-2">
-              <v-chip
-                v-for="achievement in unlockedAchievements"
-                :key="achievement.id"
-                color="success"
-                size="large"
-              >
-                {{ achievement.icon }} {{ achievement.title }}
-              </v-chip>
+        <v-card class="pa-4 mb-4">
+          <div class="d-flex align-center mb-3">
+            <v-icon size="small" color="orange" class="mr-2">mdi-fire</v-icon>
+            <div class="text-h6">Серия дней</div>
+          </div>
+          <div class="d-flex justify-space-between mb-4">
+            <div>
+              <div class="streak-value">{{ userStore.streak }} дней</div>
+              <div class="streak-label">Текущая серия</div>
+            </div>
+            <div class="text-right">
+              <div class="streak-value">21 дней</div>
+              <div class="streak-label">Рекорд</div>
             </div>
           </div>
-          <div>
-            <div class="text-subtitle-2 mb-2">В процессе ({{ inProgressCount }}):</div>
-            <div class="d-flex flex-wrap gap-2">
-              <v-chip
-                v-for="achievement in inProgressAchievements"
-                :key="achievement.id"
-                variant="outlined"
-                size="large"
-              >
-                {{ achievement.icon }} {{ achievement.title }}
-                <span v-if="achievement.progress !== undefined">
-                  ({{ achievement.progress }}/{{ achievement.maxProgress }})
-                </span>
-              </v-chip>
-            </div>
+          <div class="calendar-section">
+            <div class="calendar-title mb-3">Последние 4 недели</div>
+            <ActivityCalendar :activity-data="activityMap" />
           </div>
         </v-card>
       </v-col>
@@ -83,23 +54,79 @@
 import { computed } from 'vue'
 import { useUserStore } from '@/stores/userStore'
 import { useAchievementsStore } from '@/stores/achievementsStore'
-import ProgressBar from '@/components/ui/ProgressBar.vue'
-import { mockAchievements } from '@/mocks/mockData'
+import CircularProgressBar from '@/components/ui/CircularProgressBar.vue'
+import ActivityCalendar from '@/components/ui/ActivityCalendar.vue'
+import { subDays, format } from 'date-fns'
 
 const userStore = useUserStore()
 const achievementsStore = useAchievementsStore()
 
-const unlockedAchievements = computed(() => {
-  return mockAchievements.filter(a => a.unlocked)
-})
+// Генерируем данные активности для календаря на основе текущей серии
+const activityMap = computed(() => {
+  const map = new Map<string, boolean>()
+  const today = new Date()
 
-const inProgressAchievements = computed(() => {
-  return mockAchievements.filter(a => !a.unlocked && a.progress !== undefined)
-})
+  // Помечаем дни текущей серии как активные
+  for (let i = 0; i < userStore.streak && i < 28; i++) {
+    const date = subDays(today, i)
+    const dateKey = format(date, 'yyyy-MM-dd')
+    map.set(dateKey, true)
+  }
 
-const unlockedCount = computed(() => unlockedAchievements.value.length)
-const inProgressCount = computed(() => inProgressAchievements.value.length)
+  // Добавляем несколько дополнительных активных дней для демонстрации
+  // В реальном приложении это будет приходить из хранилища данных
+  for (let i = userStore.streak; i < 28; i += 3) {
+    const date = subDays(today, i)
+    const dateKey = format(date, 'yyyy-MM-dd')
+    if (!map.has(dateKey)) {
+      map.set(dateKey, true)
+    }
+  }
+
+  return map
+})
 </script>
+
+<style scoped>
+.user-info {
+  flex: 1;
+}
+
+.user-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #212121;
+}
+
+.user-xp,
+.user-xp-next {
+  font-size: 14px;
+  color: #757575;
+}
+
+.streak-value {
+  font-size: 24px;
+  font-weight: 600;
+  color: #212121;
+  line-height: 1.2;
+}
+
+.streak-label {
+  font-size: 14px;
+  color: #757575;
+  margin-top: 4px;
+}
+
+.calendar-section {
+  margin-top: 16px;
+}
+
+.calendar-title {
+  font-size: 14px;
+  font-weight: 500;
+  color: #424242;
+}
+</style>
 
 
 
