@@ -2,23 +2,23 @@
   <v-bottom-navigation
     :model-value="activeTab"
     @update:model-value="navigate"
-    color="primary"
     class="app-navigation"
     :elevation="0"
+    height="65"
   >
-    <v-btn value="learning">
+    <v-btn value="learning" variant="plain">
       <v-icon>mdi-book-open-variant</v-icon>
       <span>Обучение</span>
     </v-btn>
-    <v-btn value="training">
+    <v-btn value="training" variant="plain">
       <v-icon>mdi-brain</v-icon>
       <span>Тренировка</span>
     </v-btn>
-    <v-btn value="achievements">
+    <v-btn value="achievements" variant="plain">
       <v-icon>mdi-trophy</v-icon>
       <span>Достижения</span>
     </v-btn>
-    <v-btn value="profile">
+    <v-btn value="profile" variant="plain">
       <v-icon>mdi-account</v-icon>
       <span>Профиль</span>
     </v-btn>
@@ -66,14 +66,32 @@ const navigate = (value: string) => {
   box-shadow: none !important;
 }
 
-.app-navigation :deep(.v-btn) {
-  color: #9e9e9e !important;
+.app-navigation :deep(.v-bottom-navigation__content) {
+  gap: 5px;
 }
 
-.app-navigation :deep(.v-btn--active),
+.app-navigation :deep(.v-btn) {
+  color: #9e9e9e !important;
+  background-color: transparent !important;
+  background: transparent !important;
+}
+
+.app-navigation :deep(.v-btn--active) {
+  background-color: transparent !important;
+  background: transparent !important;
+  color: var(--primary-color) !important;
+}
+
 .app-navigation :deep(.v-btn--active .v-icon),
 .app-navigation :deep(.v-btn--active span) {
   color: var(--primary-color) !important;
+}
+
+.app-navigation :deep(.v-btn:hover),
+.app-navigation :deep(.v-btn:focus),
+.app-navigation :deep(.v-btn:focus-visible) {
+  background-color: transparent !important;
+  background: transparent !important;
 }
 
 @media (min-width: 600px) {

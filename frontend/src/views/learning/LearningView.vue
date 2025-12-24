@@ -6,8 +6,8 @@
           <h2 class="text-h5">Моё обучение</h2>
           <v-btn
             variant="outlined"
-            color="grey"
             prepend-icon="mdi-plus"
+            class="no-back-btn"
             @click="router.push('/learning/categories')"
           >
             Добавить курс
@@ -55,9 +55,8 @@
               </v-btn>
               <v-btn
                 variant="outlined"
-                color="grey"
                 size="large"
-                class="details-btn"
+                class="no-back-btn"
                 @click="router.push(`/learning/course/${coursesStore.activeCourse?.course_id}`)"
               >
                 Подробнее
@@ -293,12 +292,20 @@ const openLesson = (lessonId: string) => {
 }
 
 .continue-btn {
+  border: 0;
+    box-shadow: rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px;
   flex: 1;
 }
 
 .details-btn {
   flex: 0 0 auto;
 }
+
+.no-back-btn {
+  border: 0;
+  box-shadow: rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px;
+}
+
 
 .lessons-list {
   display: flex;

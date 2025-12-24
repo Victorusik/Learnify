@@ -24,6 +24,11 @@ import AppNavigation from './components/AppNavigation.vue'
 .v-application,
 .v-application * {
   font-family: var(--font-family) !important;
+  letter-spacing: normal !important;
+}
+
+.v-btn {
+  text-transform: none !important;
 }
 
 .app-main {
