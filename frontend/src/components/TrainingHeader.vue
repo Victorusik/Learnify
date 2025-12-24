@@ -1,30 +1,32 @@
 <template>
-  <div class="training-header">
-    <div class="header-content">
+  <div class="training-header pt-8">
+    <div class="header-top">
       <div class="header-left">
-        <div class="level-info">
-          <span class="level-text">Уровень {{ userStore.level }}</span>
-          <div class="streak-info">
-            <v-icon size="small" class="streak-icon">mdi-hourglass</v-icon>
-            <span class="streak-text">{{ userStore.streak }} дней</span>
-          </div>
+        <div class="level-badge">
+          <span>Уровень {{ userStore.level }}</span>
+        </div>
+        <div class="streak-badge">
+          <v-icon size="small" class="streak-icon">mdi-fire</v-icon>
+          <span>{{ userStore.streak }} дней</span>
         </div>
       </div>
       <div class="header-right">
         <div class="greeting">Привет, {{ userStore.name }}!</div>
-        <v-btn
-          size="small"
-          variant="text"
-          class="change-goal-btn"
-          prepend-icon="mdi-cog"
-          @click="$emit('change-goal')"
-        >
-          Изменить цель
-        </v-btn>
       </div>
     </div>
-    <div class="progress-section">
+    <div class="header-bottom">
       <div class="progress-label">Сегодня: {{ userStore.completedToday }}/{{ userStore.dailyGoal }} уроков</div>
+      <v-btn
+        size="small"
+        variant="text"
+        class="change-goal-btn"
+        prepend-icon="mdi-cog"
+        @click="$emit('change-goal')"
+      >
+        Изменить цель
+      </v-btn>
+    </div>
+    <div class="progress-section">
       <v-progress-linear
         :model-value="dailyProgress"
         color="white"
@@ -57,11 +59,11 @@ const dailyProgress = computed(() => {
   background-color: var(--primary-color);
   color: white;
   padding: 16px;
-  border-radius: 0 0 16px 16px;
+  border-radius: 0 0 var(--border-radius-large) var(--border-radius-large);
   margin: -16px -16px 16px -16px;
 }
 
-.header-content {
+.header-top {
   display: flex;
   justify-content: space-between;
   align-items: flex-start;
@@ -70,42 +72,30 @@ const dailyProgress = computed(() => {
 
 .header-left {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 8px;
 }
 
-.level-info {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.level-text {
-  font-size: 16px;
-  font-weight: 600;
-  color: white;
-}
-
-.streak-info {
+.level-badge,
+.streak-badge {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: var(--border-radius-card);
+  padding: 6px 12px;
   display: flex;
   align-items: center;
   gap: 4px;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
 }
 
 .streak-icon {
   color: white;
 }
 
-.streak-text {
-  font-size: 14px;
-  color: white;
-}
-
 .header-right {
   display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 8px;
+  align-items: flex-start;
 }
 
 .greeting {
@@ -113,6 +103,18 @@ const dailyProgress = computed(() => {
   font-weight: 600;
   color: white;
   text-align: right;
+}
+
+.header-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.progress-label {
+  font-size: 14px;
+  color: white;
 }
 
 .change-goal-btn {
@@ -126,13 +128,7 @@ const dailyProgress = computed(() => {
 }
 
 .progress-section {
-  margin-top: 12px;
-}
-
-.progress-label {
-  font-size: 14px;
-  color: white;
-  margin-bottom: 8px;
+  width: 100%;
 }
 
 .progress-bar {

@@ -2,7 +2,15 @@
   <v-container>
     <v-row>
       <v-col cols="12">
-        <h2 class="text-h5 mb-4">{{ categoryName }}</h2>
+        <div class="d-flex align-center mb-4">
+          <v-btn
+            icon="mdi-arrow-left"
+            variant="text"
+            class="mr-2"
+            @click="router.back()"
+          />
+          <h2 class="text-h5">{{ categoryName }}</h2>
+        </div>
       </v-col>
     </v-row>
     <v-row>
@@ -10,10 +18,10 @@
         v-for="course in categoryCourses"
         :key="course.course_id"
         cols="12"
-        sm="6"
-        md="4"
+        class="d-flex"
       >
         <CourseCard
+          class="flex-grow-1"
           :course="course"
           @details="goToCourse(course.course_id)"
         />

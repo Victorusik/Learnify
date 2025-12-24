@@ -225,7 +225,7 @@ const openLesson = (lessonId: string) => {
 
 <style scoped>
 .course-header-card {
-  border-radius: 16px;
+  border-radius: var(--border-radius-large);
   overflow: hidden;
 }
 
@@ -263,7 +263,7 @@ const openLesson = (lessonId: string) => {
   bottom: 16px;
   left: 16px;
   background-color: rgba(255, 255, 255, 0.2);
-  border-radius: 50%;
+  border-radius: var(--border-radius-circle);
   width: 48px;
   height: 48px;
   display: flex;
@@ -297,7 +297,7 @@ const openLesson = (lessonId: string) => {
 
 .continue-btn {
   border: 0;
-    box-shadow: rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px;
+  box-shadow: rgba(0, 0, 0, 0.05) 0px 6px 24px 0px, rgba(0, 0, 0, 0.08) 0px 0px 0px 1px;
   flex: 1;
 }
 
@@ -322,7 +322,7 @@ const openLesson = (lessonId: string) => {
   align-items: center;
   gap: 12px;
   padding: 12px;
-  border-radius: 12px;
+  border-radius: var(--border-radius-card);
   border: 1px solid;
   cursor: pointer;
   transition: all 0.2s;
@@ -349,9 +349,9 @@ const openLesson = (lessonId: string) => {
 }
 
 .lesson-icon-circle {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  border-radius: var(--border-radius-circle);
   display: flex;
   align-items: center;
   justify-content: center;

@@ -18,9 +18,9 @@
     </v-row>
     <v-row>
       <v-col cols="12">
-        <v-card class="pa-4 mb-4">
-          <div class="d-flex align-center mb-4">
-            <v-icon size="small" class="mr-2">mdi-chart-bar</v-icon>
+        <v-card class="border-radius-large box-shadow-1 pa-4 mb-4">
+          <div class="d-flex align-center mb-8">
+            <v-icon size="small" color="primary" class="mr-2">mdi-chart-bar</v-icon>
             <div class="text-h6">Статистика</div>
           </div>
           <div class="statistics-grid">
@@ -50,9 +50,9 @@
     </v-row>
     <v-row>
       <v-col cols="12">
-        <v-card class="pa-4">
-          <div class="d-flex align-center mb-4">
-            <v-icon size="small" class="mr-2">mdi-cog</v-icon>
+        <v-card class="border-radius-large box-shadow-1 pa-4">
+          <div class="d-flex align-center mb-10">
+            <v-icon size="small" color="primary" class="mr-2">mdi-cog</v-icon>
             <div class="text-h6">Настройки обучения</div>
           </div>
           <div class="mb-4">
@@ -73,7 +73,7 @@
           <div class="mb-4">
             <div class="d-flex justify-space-between align-center mb-2">
               <div class="d-flex align-center">
-                <v-icon size="small" class="mr-2">mdi-bell</v-icon>
+                <v-icon size="small" color="primary" class="mr-2">mdi-bell</v-icon>
                 <span class="setting-label">Уведомления</span>
               </div>
               <v-switch
@@ -81,9 +81,6 @@
                 color="primary"
                 hide-details
               />
-            </div>
-            <div class="notification-times">
-              {{ notificationTimesText }}
             </div>
           </div>
           <div>
@@ -121,9 +118,6 @@ const dailyGoal = ref(userStore.dailyGoal)
 const notificationsEnabled = ref(true)
 const categories = mockCategories
 
-const notificationTimesText = computed(() => {
-  return userStore.notifications.map(n => n.time).join(', ')
-})
 
 const getCategoryIcon = (categoryId: string): string => {
   const iconMap: Record<string, string> = {
@@ -165,7 +159,7 @@ const toggleCategory = (categoryId: string) => {
 .avatar {
   width: 64px;
   height: 64px;
-  border-radius: 50%;
+  border-radius: var(--border-radius-circle);
   background-color: var(--primary-color);
   color: white;
   display: flex;

@@ -9,10 +9,7 @@ export const useUserStore = defineStore('user', () => {
   const dailyGoal = ref(5)
   const completedToday = ref(3)
   const selectedCategories = ref<string[]>(['health', 'tech'])
-  const notifications = ref<{ time: string }[]>([
-    { time: '09:00' },
-    { time: '19:00' }
-  ])
+
 
   const xpToNextLevel = computed(() => {
     const xpForCurrentLevel = level.value * 100
@@ -67,7 +64,6 @@ export const useUserStore = defineStore('user', () => {
     dailyGoal,
     completedToday,
     selectedCategories,
-    notifications,
     xpToNextLevel,
     xpProgress,
     addXP,

@@ -2,17 +2,17 @@
   <v-container>
     <v-row>
       <v-col cols="12">
-        <v-card class="pa-4 mb-4">
+        <v-card class="border-radius-large box-shadow-1 pa-4 mb-4">
           <div class="d-flex align-center">
             <CircularProgressBar
               :progress="userStore.xpProgress"
               :size="80"
             />
-            <div class="user-info ml-4">
+            <div class="user-info ml-5">
               <div class="user-name">
                 {{ userStore.name }} (Уровень {{ userStore.level }})
               </div>
-              <div class="user-xp mt-1">
+              <div class="user-xp mt-2">
                 Всего опыта: {{ userStore.xp }} XP
               </div>
               <div class="user-xp-next mt-1">
@@ -25,7 +25,7 @@
     </v-row>
     <v-row>
       <v-col cols="12">
-        <v-card class="pa-4 mb-4">
+        <v-card class="border-radius-large box-shadow-1 pa-4 mb-4">
           <div class="d-flex align-center mb-3">
             <v-icon size="small" color="orange" class="mr-2">mdi-fire</v-icon>
             <div class="text-h6">Серия дней</div>

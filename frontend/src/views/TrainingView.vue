@@ -167,7 +167,7 @@ const nextCard = () => {
 
 .question-card {
   padding: 20px;
-  border-radius: 16px;
+  border-radius: var(--border-radius-large);
 }
 
 .card-header {

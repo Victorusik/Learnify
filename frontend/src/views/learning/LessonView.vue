@@ -2,9 +2,9 @@
   <v-container>
     <v-row v-if="lesson">
       <v-col cols="12">
-        <div class="d-flex justify-space-between align-center mb-4">
+        <div class="d-flex justify-space-between align-center mb-6">
           <div>
-            <div class="text-h6">{{ lesson.title }} ({{ lesson.order }}/{{ totalLessons }})</div>
+            <div class="text-subtitle-2">{{ lesson.title }} ({{ lesson.order }}/{{ totalLessons }})</div>
           </div>
           <v-btn
             icon="mdi-arrow-left"

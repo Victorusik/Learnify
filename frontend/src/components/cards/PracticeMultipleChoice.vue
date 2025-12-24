@@ -131,7 +131,7 @@ const handleAnswer = () => {
   letter-spacing: normal;
   padding: 16px;
   min-height: 56px;
-  border-radius: 8px;
+  border-radius: var(--border-radius-medium);
 }
 
 .option-letter {

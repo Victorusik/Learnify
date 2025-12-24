@@ -2,7 +2,15 @@
   <v-container>
     <v-row>
       <v-col cols="12">
-        <h2 class="text-h5 mb-4">Выберите направление</h2>
+        <div class="d-flex align-center mb-4">
+          <v-btn
+            icon="mdi-arrow-left"
+            variant="text"
+            class="mr-2"
+            @click="router.back()"
+          />
+          <h2 class="text-h5">Выберите направление</h2>
+        </div>
       </v-col>
     </v-row>
     <v-row>
@@ -10,7 +18,6 @@
         v-for="category in categories"
         :key="category.id"
         cols="12"
-        md="6"
         class="d-flex"
       >
         <CategoryCard
@@ -35,6 +42,7 @@ const goToCategory = (categoryId: string) => {
   router.push(`/learning/category/${categoryId}`)
 }
 </script>
+
 
 
 

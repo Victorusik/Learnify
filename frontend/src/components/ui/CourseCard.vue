@@ -1,7 +1,6 @@
 <template>
   <v-card
-    :elevation="3"
-    class="course-card"
+    class="course-card box-shadow-1"
     :style="{ borderRadius: 'var(--card-border-radius)' }"
   >
     <v-img
@@ -17,7 +16,7 @@
         {{ course.level }}
       </v-chip>
     </v-img>
-    <v-card-title>{{ course.title }}</v-card-title>
+    <v-card-title class="course-title">{{ course.title }}</v-card-title>
     <v-card-subtitle>{{ course.short_description }}</v-card-subtitle>
     <v-card-text>
       <div class="d-flex align-center mb-2">
@@ -74,5 +73,11 @@ const getLevelColor = (level: string) => {
 <style scoped>
 .course-card {
   height: 100%;
+}
+
+.course-title {
+  font-size: var(--heading-size);
+  font-weight: 500;
+  white-space: normal;
 }
 </style>
