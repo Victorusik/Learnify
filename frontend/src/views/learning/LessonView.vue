@@ -5,9 +5,6 @@
         <div class="d-flex justify-space-between align-center mb-4">
           <div>
             <div class="text-h6">{{ lesson.title }} ({{ lesson.order }}/{{ totalLessons }})</div>
-            <div class="text-caption">
-              Прогресс: {{ completedBlocks }}/{{ totalBlocks }} карточек
-            </div>
           </div>
           <v-btn
             icon="mdi-arrow-left"
@@ -17,7 +14,8 @@
         </div>
         <ProgressBar
           :progress="progress"
-          label="Прогресс урока"
+          :completed-blocks="completedBlocks"
+          :total-blocks="totalBlocks"
         />
       </v-col>
     </v-row>

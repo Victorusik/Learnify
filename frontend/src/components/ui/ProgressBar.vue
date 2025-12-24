@@ -1,4 +1,4 @@
-<template>
+ <template>
   <div class="progress-bar">
     <v-progress-linear
       :model-value="progress"
@@ -8,7 +8,10 @@
       class="progress-fill"
     />
     <div class="d-flex justify-space-between mt-1">
-      <span class="text-caption">{{ label }}</span>
+      <span class="text-caption" v-if="completedBlocks !== undefined && totalBlocks !== undefined">
+        Прогресс: {{ completedBlocks }}/{{ totalBlocks }} карточек
+      </span>
+      <span class="text-caption" v-else>{{ label }}</span>
       <span class="text-caption">{{ Math.round(progress) }}%</span>
     </div>
   </div>
@@ -17,10 +20,10 @@
 <script setup lang="ts">
 withDefaults(defineProps<{
   progress: number
-  label?: string
   color?: string
+  completedBlocks?: number
+  totalBlocks?: number
 }>(), {
-  label: '',
   color: 'primary'
 })
 </script>

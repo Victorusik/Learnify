@@ -17,7 +17,7 @@
     </v-row>
     <v-row v-if="coursesStore.activeCourse">
       <v-col cols="12">
-        <v-card class="course-header-card mb-4" elevation="0">
+        <v-card class="course-header-card mb-4 box-shadow-1">
           <div
             class="course-background"
             :style="{ backgroundImage: `url(${coursesStore.activeCourse.cover_image_url})` }"
@@ -68,7 +68,11 @@
     </v-row>
     <v-row v-if="coursesStore.activeCourse">
       <v-col cols="12">
-        <v-card class="pa-4">
+        <v-card
+          class="background-color-1 pa-4"
+          elevation="0"
+          :style="{ background: 'transparent' }"
+        >
           <div class="text-h6 mb-4">Уроки курса</div>
           <div class="lessons-list">
             <div
@@ -387,5 +391,11 @@ const openLesson = (lessonId: string) => {
 .lesson-duration {
   font-size: 14px;
   color: #757575;
+}
+
+/* Переопределение фона v-card с классом background-color-1 */
+:deep(.v-card.background-color-1) {
+  background: transparent !important;
+  background-color: transparent !important;
 }
 </style>

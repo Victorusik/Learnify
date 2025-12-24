@@ -6,10 +6,26 @@
   --heading-size: 18px;
   --text-size: 16px;
 
-  --background-color-1: #05d0a807;
+  --background-color-1: rgba(5, 208, 168, 0.027);
   --muted-foreground: oklch(.5 .01 240);
 
   --app-max-width: 460px;
 
 }
 
+.reset-box-shadow {
+  box-shadow: none !important;
+}
+
+.box-shadow-1 {
+box-shadow: rgba(50, 50, 105, 0.15) 0px 2px 5px 0px, rgba(0, 0, 0, 0.05) 0px 1px 1px 0px;
+}
+
+.background-color-1 {
+  background-color: var(--background-color-1) !important;
+}
+
+/* Специфичный стиль для v-card с классом background-color-1 */
+.v-card.background-color-1 {
+  background-color: var(--background-color-1) !important;
+}
