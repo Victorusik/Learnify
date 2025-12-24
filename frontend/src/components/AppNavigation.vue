@@ -67,8 +67,18 @@ const navigate = (value: string) => {
 </script>
 
 <style scoped>
+.v-bottom-navigation .v-btn,
+.v-bottom-navigation .v-btn .v-icon,
+.v-bottom-navigation .v-btn span {
+  color: var(--muted-foreground) !important;
+}
 
-
+@media (min-width: 600px) {
+  .v-bottom-navigation__content {
+    max-width: var(--app-max-width);
+    margin: 0 auto;
+  }
+}
 </style>
 
 

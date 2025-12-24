@@ -13,9 +13,12 @@ import AppNavigation from './components/AppNavigation.vue'
 
 <style>
 
+#app {
+  background-color: var(--background-color-1) !important;
+}
 
 .v-application {
-  background-color: var(--background-color-1);
+  background-color: var(--background-color-1) !important;
   font-family: var(--font-family) !important;
 }
 

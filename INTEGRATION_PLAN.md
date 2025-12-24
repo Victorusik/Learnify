@@ -22,31 +22,31 @@
 ### Этап 1: Настройка окружения и зависимостей
 
 #### 1.1. Установка HTTP клиента для фронтенда
-- [ ] Установить `axios` или использовать встроенный `fetch`
-- [ ] Создать конфигурацию для API базового URL
-- [ ] Настроить переменные окружения для разных сред (dev/prod)
+- [x] Установить `axios` или использовать встроенный `fetch`
+- [x] Создать конфигурацию для API базового URL
+- [x] Настроить переменные окружения для разных сред (dev/prod)
 
 #### 1.2. Создание файла конфигурации окружения
-- [ ] Создать `.env.development` с `VITE_API_URL=http://localhost:3001/api`
-- [ ] Создать `.env.production` с `VITE_API_URL=http://backend:3000/api` (для Docker)
-- [ ] Обновить `vite.config.ts` для использования переменных окружения
+- [x] Создать `.env.development` с `VITE_API_URL=http://localhost:3001/api`
+- [x] Создать `.env.production` с `VITE_API_URL=http://backend:3000/api` (для Docker)
+- [x] Обновить `vite.config.ts` для использования переменных окружения
 
 ---
 
 ### Этап 2: Создание API клиента
 
 #### 2.1. Создание базового API клиента
-- [ ] Создать `src/services/api.ts` с базовой конфигурацией axios/fetch
-- [ ] Настроить interceptors для обработки ошибок
-- [ ] Добавить обработку токенов авторизации (если будет добавлена позже)
+- [x] Создать `src/services/api.ts` с базовой конфигурацией axios/fetch
+- [x] Настроить interceptors для обработки ошибок
+- [x] Добавить обработку токенов авторизации (если будет добавлена позже)
 
 #### 2.2. Создание сервисов для каждого ресурса
-- [ ] `src/services/coursesService.ts` - работа с курсами
-- [ ] `src/services/categoriesService.ts` - работа с категориями
-- [ ] `src/services/lessonsService.ts` - работа с уроками
-- [ ] `src/services/progressService.ts` - работа с прогрессом
-- [ ] `src/services/trainingService.ts` - работа с тренировками
-- [ ] `src/services/achievementsService.ts` - работа с достижениями
+- [x] `src/services/coursesService.ts` - работа с курсами
+- [x] `src/services/categoriesService.ts` - работа с категориями
+- [x] `src/services/lessonsService.ts` - работа с уроками
+- [x] `src/services/progressService.ts` - работа с прогрессом
+- [x] `src/services/trainingService.ts` - работа с тренировками
+- [x] `src/services/achievementsService.ts` - работа с достижениями
 
 ---
 

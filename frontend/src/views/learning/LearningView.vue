@@ -25,15 +25,18 @@
             :progress="coursesStore.getCourseProgress(coursesStore.activeCourse.course_id)"
             label="Прогресс курса"
           />
-          <div class="d-flex gap-2 mt-4">
+          <div class="d-flex mt-4">
             <v-btn
               color="primary"
+              class="flex-grow-0 mr-2"
+              style="width: 60%"
               @click="continueCourse"
             >
               Продолжить
             </v-btn>
             <v-btn
               variant="outlined"
+              class="flex-grow-1"
               @click="$router.push(`/learning/course/${coursesStore.activeCourse?.course_id}`)"
             >
               Подробнее
@@ -138,3 +141,6 @@ const openLesson = (lessonId: string) => {
 }
 </script>
 
+<style scoped>
+
+</style>
