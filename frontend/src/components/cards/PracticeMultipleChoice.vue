@@ -4,18 +4,18 @@
       <p class="question-text">{{ block.question }}</p>
     </div>
     <div class="options-section">
-      <v-btn
+      <div
         v-for="(option, index) in block.options"
         :key="index"
-        :variant="selectedAnswer === option ? 'elevated' : 'outlined'"
-        :color="selectedAnswer === option ? 'primary' : 'default'"
-        :disabled="showResult"
-        class="option-btn"
-        @click="selectedAnswer = option"
+        class="option-item"
+        :class="{ 'option-item-selected': selectedAnswer === option }"
+        @click="!showResult && (selectedAnswer = option)"
       >
-        <span class="option-letter">{{ String.fromCharCode(65 + index) }}:</span>
-        <span class="option-text">{{ option }}</span>
-      </v-btn>
+        <div class="option-letter-circle">
+          {{ String.fromCharCode(65 + index) }}
+        </div>
+        <div class="option-text">{{ option }}</div>
+      </div>
     </div>
     <v-expand-transition>
       <div v-if="showResult" class="result-section">
@@ -111,10 +111,9 @@ const handleAnswer = () => {
 }
 
 .question-text {
-  font-size: 18px;
+  font-size: var(--question-title-size);
   font-weight: 600;
   line-height: 1.5;
-  color: #000;
   margin: 0;
 }
 
@@ -125,24 +124,52 @@ const handleAnswer = () => {
   margin-bottom: 24px;
 }
 
-.option-btn {
-  justify-content: flex-start;
-  text-transform: none;
-  letter-spacing: normal;
-  padding: 16px;
-  min-height: 56px;
+.option-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 13px;
+  border: 1px solid #e0e0e0;
   border-radius: var(--border-radius-medium);
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.2s;
 }
 
-.option-letter {
+.option-item:hover {
+  border-color: var(--primary-color);
+}
+
+.option-item-selected {
+  background-color: rgba(5, 208, 168, 0.1);
+  border-color: var(--primary-color);
+}
+
+.option-letter-circle {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--border-radius-circle);
+  background-color: #f5f5f5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   font-weight: 600;
-  margin-right: 8px;
-  min-width: 24px;
+  font-size: 14px;
+  color: #424242;
+  flex-shrink: 0;
+}
+
+.option-item-selected .option-letter-circle {
+  background-color: var(--primary-color);
+  color: white;
 }
 
 .option-text {
-  text-align: left;
   flex: 1;
+  font-size: 14px;
+  line-height: 1.5;
+  word-wrap: break-word;
+  white-space: normal;
 }
 
 .result-section {

@@ -1,12 +1,12 @@
 <template>
-  <BaseCard>
-    <v-card-title class="text-h6">{{ block.title }}</v-card-title>
+  <BaseCard class="box-shadow-2">
+    <v-card-title class="question-title">{{ block.title }}</v-card-title>
     <v-card-text>
-      <p class="text-body-1 mb-4">{{ block.content }}</p>
+      <p class="text-body-2 mb-4">{{ block.content }}</p>
 
         <v-img
           src="https://img.freepik.com/premium-photo/majestic-lion-wearing-elegant-crown-against-dark-background_626475-6901.jpg?semt=ais_hybrid&w=740"
-          class="mb-4"
+          class="border-radius-card mb-4"
           max-height="300"
           cover
         />

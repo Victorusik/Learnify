@@ -1,6 +1,6 @@
 <template>
-  <BaseCard>
-    <v-card-title class="text-h6">{{ block.title }}</v-card-title>
+  <BaseCard class="box-shadow-2">
+    <v-card-title class="question-title">{{ block.title }}</v-card-title>
     <v-card-text>
       <p class="text-body-1 mb-4" v-if="block.content">{{ block.content }}</p>
       <v-expand-transition>

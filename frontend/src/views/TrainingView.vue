@@ -3,16 +3,24 @@
     <TrainingHeader @change-goal="router.push('/profile')" />
     <v-row>
       <v-col cols="12">
-        <v-card v-if="currentCard" class="question-card" elevation="0">
+        <v-card v-if="currentCard" class="question-card background-transparent" elevation="0">
           <div class="card-header">
-            <v-chip
-              size="small"
-              color="primary"
-              prepend-icon="mdi-lightbulb-outline"
-              class="category-chip"
-            >
-              {{ getCategoryName(currentCard) }}
-            </v-chip>
+            <div class="chips-group">
+              <v-chip
+                size="small"
+                color="primary"
+                prepend-icon="mdi-lightbulb-outline"
+                class="category-chip"
+              >
+                {{ getCategoryName(currentCard) }}
+              </v-chip>
+              <v-chip
+                size="small"
+                class="practice-chip"
+              >
+                {{ getCardType(currentCard) }}
+              </v-chip>
+            </div>
             <div class="review-info">
               {{ getReviewReason(currentCard) }}
             </div>
@@ -20,13 +28,7 @@
           <div class="topic-info">
             {{ getTopicInfo(currentCard) }}
           </div>
-          <v-chip
-            size="small"
-            variant="outlined"
-            class="practice-chip"
-          >
-            {{ getCardType(currentCard) }}
-          </v-chip>
+
           <component
             :is="getCardComponent(currentCard)"
             :block="currentCard"
@@ -173,8 +175,14 @@ const nextCard = () => {
 .card-header {
   display: flex;
   justify-content: space-between;
-  align-items: flex-start;
+  align-items: center;
   margin-bottom: 12px;
+}
+
+.chips-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
 .category-chip {
@@ -194,9 +202,6 @@ const nextCard = () => {
   line-height: 1.4;
 }
 
-.practice-chip {
-  margin-bottom: 20px;
-}
 </style>
 
 

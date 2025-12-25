@@ -91,11 +91,12 @@ const calendarDays = computed<Day[]>(() => {
 }
 
 .calendar-day.active {
-  background-color: var(--primary-color);
+  background-color: var(--secondary-color);
 }
 
 .calendar-day.current {
-  border: 2px solid var(--primary-color);
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
   box-sizing: border-box;
 }
 </style>
