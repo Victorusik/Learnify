@@ -7,7 +7,7 @@
         </div>
         <div class="streak-badge">
           <v-icon size="small" class="streak-icon">mdi-fire</v-icon>
-          <span>{{ userStore.streak }} дней</span>
+          <span>{{ userStore.streak }}</span>
         </div>
       </div>
       <div class="header-right">
@@ -49,8 +49,10 @@ defineEmits<{
 }>()
 
 const dailyProgress = computed(() => {
-  if (userStore.dailyGoal === 0) return 0
-  return (userStore.completedToday / userStore.dailyGoal) * 100
+  const completed = userStore.completedToday
+  const goal = userStore.dailyGoal
+  if (goal === 0) return 0
+  return (completed / goal) * 100
 })
 </script>
 
@@ -88,6 +90,7 @@ const dailyProgress = computed(() => {
   font-weight: 600;
   color: white;
 }
+
 
 .streak-icon {
   color: white;

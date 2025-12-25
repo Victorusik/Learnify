@@ -39,7 +39,10 @@ export const useCoursesStore = defineStore('courses', () => {
 
   const markBlockCompleted = (lessonId: string, /* blockOrder: number */) => {
     const current = lessonsProgress.value.get(lessonId) || 0
-    lessonsProgress.value.set(lessonId, current + 1)
+    // Создаем новую Map для реактивности
+    const newMap = new Map(lessonsProgress.value)
+    newMap.set(lessonId, current + 1)
+    lessonsProgress.value = newMap
   }
 
   const getLessonProgress = (lessonId: string): number => {

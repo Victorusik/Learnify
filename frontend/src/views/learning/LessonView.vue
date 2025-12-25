@@ -87,6 +87,7 @@ const totalBlocks = computed(() => {
 })
 
 const completedBlocks = computed(() => {
+  // Отслеживаем изменения Map через обращение к value
   return coursesStore.lessonsProgress.get(lessonId) || 0
 })
 
@@ -113,10 +114,16 @@ const getBlockComponent = (block: Block) => {
 }
 
 const cardsStore = useCardsStore()
+const processedBlocks = ref<Set<number>>(new Set())
 
 const handleAnswer = (isCorrect: boolean) => {
   if (currentBlock.value) {
-    coursesStore.markBlockCompleted(lessonId, currentBlock.value.order)
+    // Обновляем прогресс для практики с ответом
+    const blockOrder = currentBlock.value.order
+    if (!processedBlocks.value.has(blockOrder)) {
+      coursesStore.markBlockCompleted(lessonId)
+      processedBlocks.value.add(blockOrder)
+    }
     if (!isCorrect) {
       // Помечаем карточку для повторения
       const blockId = `${currentBlock.value.type}-${currentBlock.value.order}`
@@ -126,6 +133,16 @@ const handleAnswer = (isCorrect: boolean) => {
 }
 
 const nextBlock = () => {
+  // Обновляем прогресс для карточек, которые еще не были обработаны
+  if (currentBlock.value) {
+    const blockOrder = currentBlock.value.order
+    if (!processedBlocks.value.has(blockOrder)) {
+      // Карточка еще не обработана (теория или практика без answer-submitted)
+      coursesStore.markBlockCompleted(lessonId)
+      processedBlocks.value.add(blockOrder)
+    }
+  }
+
   if (currentBlockIndex.value < totalBlocks.value - 1) {
     currentBlockIndex.value++
   }

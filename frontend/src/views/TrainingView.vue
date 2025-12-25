@@ -153,6 +153,8 @@ const handleAnswer = (isCorrect: boolean) => {
 }
 
 const nextCard = () => {
+  userStore.incrementCompletedToday();
+
   if (cardsStore.reviewQueue.length > 0) {
     currentCard.value = cardsStore.reviewQueue[0]
     cardsStore.reviewQueue = cardsStore.reviewQueue.slice(1)

@@ -3,11 +3,11 @@ import { ref, computed } from 'vue'
 
 export const useUserStore = defineStore('user', () => {
   const name = ref('Алексей')
-  const level = ref(12)
-  const xp = ref(1245)
-  const streak = ref(14)
+  const level = ref(1)
+  const xp = ref(0)
+  const streak = ref(1)
   const dailyGoal = ref(5)
-  const completedToday = ref(3)
+  const completedToday = ref(0)
   const selectedCategories = ref<string[]>(['health', 'tech'])
 
 
@@ -56,6 +56,10 @@ export const useUserStore = defineStore('user', () => {
     streak.value = 0
   }
 
+  const incrementCompletedToday = () => {
+    completedToday.value += 1
+  }
+
   return {
     name,
     level,
@@ -71,7 +75,8 @@ export const useUserStore = defineStore('user', () => {
     updateNotifications,
     toggleCategory,
     incrementStreak,
-    resetStreak
+    resetStreak,
+    incrementCompletedToday
   }
 })
 

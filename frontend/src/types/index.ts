@@ -47,6 +47,7 @@ export interface TheoryBlock {
   title: string
   content: string
   visualization_hint: string
+  image_url?: string
 }
 
 // Практическая карточка (4 подтипа)
@@ -63,6 +64,7 @@ export interface PracticeBlock {
   explanation?: string
   answer?: string
   sample_answer?: string
+  image_url?: string
 }
 
 // Данные для Spaced Repetition
