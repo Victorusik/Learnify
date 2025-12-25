@@ -6,7 +6,7 @@
           :src="course.cover_image_url"
           height="200"
           cover
-          class="mb-4"
+          class="mb-4 border-radius-medium"
         />
         <v-chip
           :color="getLevelColor(course.level)"
@@ -14,7 +14,21 @@
         >
           {{ course.level }}
         </v-chip>
-        <h1 class="text-h4 mb-2">{{ course.title }}</h1>
+        <h1 class="text-h5 mb-2">{{ course.title }}</h1>
+        <div class="course-info mb-4">
+          <div class="info-item">
+            <v-icon size="small" class="mr-1">mdi-clock-outline</v-icon>
+            <span>{{ course.estimated_duration_hours }} часов</span>
+          </div>
+          <div class="info-item">
+            <v-icon size="small" class="mr-1">mdi-book-open-variant</v-icon>
+            <span>{{ course.total_lessons }} уроков</span>
+          </div>
+          <div class="info-item">
+            <v-icon size="small" class="mr-1">mdi-star</v-icon>
+            <span>{{ course.total_practice_tasks }} XP</span>
+          </div>
+        </div>
         <p class="text-body-1 mb-4">{{ course.full_description }}</p>
         <div class="mb-4">
           <div class="text-h6 mb-2">Чему вы научитесь:</div>
@@ -25,16 +39,8 @@
           </ul>
         </div>
         <div class="mb-4">
-          <div class="text-h6 mb-2">Требования:</div>
-          <ul>
-            <li v-for="(req, index) in course.prerequisites" :key="index">
-              {{ req }}
-            </li>
-          </ul>
-        </div>
-        <div class="mb-4">
           <div class="text-h6 mb-2">Структура курса:</div>
-          <v-list>
+          <v-list class="background-transparent">
             <v-list-item
               v-for="lesson in lessons"
               :key="lesson.id"
@@ -47,6 +53,7 @@
           color="primary"
           size="large"
           block
+          elevation="0"
           @click="enroll"
         >
           Записаться на курс
@@ -94,6 +101,22 @@ const enroll = () => {
   router.push('/learning')
 }
 </script>
+
+<style scoped>
+.course-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.info-item {
+  display: flex;
+  align-items: center;
+  font-size: 14px;
+  color: #757575;
+}
+</style>
 
 
 

@@ -3,16 +3,14 @@
     <v-card-title class="question-title">{{ block.title }}</v-card-title>
     <v-card-text>
       <p class="text-body-1 mb-4" v-if="block.content">{{ block.content }}</p>
-      <v-expand-transition>
-        <div v-if="showHints" class="mb-4">
-          <v-card variant="outlined" class="pa-3">
-            <p class="text-caption font-weight-bold mb-1">Подсказки:</p>
-            <ul class="text-caption">
-              <li v-for="(hint, index) in block.hints" :key="index">{{ hint }}</li>
-            </ul>
-          </v-card>
-        </div>
-      </v-expand-transition>
+      <div v-if="showHints && block.hints && block.hints.length > 0" class="hints-section">
+        <v-card class="pa-3 box-shadow-2">
+          <p class="text-caption font-weight-bold mb-2">Подсказки:</p>
+          <ul class="text-body-2">
+            <li v-for="(hint, index) in block.hints" :key="index" class="hint-item">{{ hint }}</li>
+          </ul>
+        </v-card>
+      </div>
       <v-expand-transition>
         <div v-if="showAnswer" class="mt-4">
           <v-card
@@ -27,13 +25,16 @@
       </v-expand-transition>
     </v-card-text>
     <v-card-actions>
+      <v-spacer />
       <v-btn
+        icon
         variant="text"
+        size="small"
+        class="hint-btn"
         @click="showHints = !showHints"
       >
-        💡 Подсказка
+        <v-icon>mdi-help-circle-outline</v-icon>
       </v-btn>
-      <v-spacer />
       <v-btn
         v-if="!showAnswer"
         color="primary"
@@ -68,6 +69,22 @@ const emit = defineEmits<{
 const showHints = ref(false)
 const showAnswer = ref(false)
 </script>
+
+<style scoped>
+.hints-section {
+  margin-bottom: 24px;
+}
+
+.hint-btn {
+  min-width: 40px;
+  width: 40px;
+  height: 40px;
+}
+
+.hint-item {
+  list-style-type: none;
+}
+</style>
 
 
 
