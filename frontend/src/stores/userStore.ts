@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
+import { format } from 'date-fns'
 
 export const useUserStore = defineStore('user', () => {
   const name = ref('Алексей')
@@ -9,6 +10,7 @@ export const useUserStore = defineStore('user', () => {
   const dailyGoal = ref(5)
   const completedToday = ref(0)
   const selectedCategories = ref<string[]>(['health', 'tech'])
+  const lastStreakUpdateDate = ref<string | null>(null)
 
 
   const xpToNextLevel = computed(() => {
@@ -35,10 +37,6 @@ export const useUserStore = defineStore('user', () => {
     dailyGoal.value = goal
   }
 
-  const updateNotifications = (times: { time: string }[]) => {
-    notifications.value = times
-  }
-
   const toggleCategory = (categoryId: string) => {
     const index = selectedCategories.value.indexOf(categoryId)
     if (index > -1) {
@@ -50,6 +48,7 @@ export const useUserStore = defineStore('user', () => {
 
   const incrementStreak = () => {
     streak.value += 1
+    lastStreakUpdateDate.value = format(new Date(), 'yyyy-MM-dd')
   }
 
   const resetStreak = () => {
@@ -58,6 +57,15 @@ export const useUserStore = defineStore('user', () => {
 
   const incrementCompletedToday = () => {
     completedToday.value += 1
+
+    // Проверяем, достигнута ли цель и не был ли стрик уже увеличен сегодня
+    const today = format(new Date(), 'yyyy-MM-dd')
+    const wasStreakUpdatedToday = lastStreakUpdateDate.value === today
+
+    if (completedToday.value >= dailyGoal.value && !wasStreakUpdatedToday) {
+      incrementStreak()
+      lastStreakUpdateDate.value = today
+    }
   }
 
   return {
@@ -68,11 +76,11 @@ export const useUserStore = defineStore('user', () => {
     dailyGoal,
     completedToday,
     selectedCategories,
+    lastStreakUpdateDate,
     xpToNextLevel,
     xpProgress,
     addXP,
     updateDailyGoal,
-    updateNotifications,
     toggleCategory,
     incrementStreak,
     resetStreak,

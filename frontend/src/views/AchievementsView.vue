@@ -66,21 +66,11 @@ const activityMap = computed(() => {
   const map = new Map<string, boolean>()
   const today = new Date()
 
-  // Помечаем дни текущей серии как активные
+  // Помечаем только дни текущей серии как активные
   for (let i = 0; i < userStore.streak && i < 28; i++) {
     const date = subDays(today, i)
     const dateKey = format(date, 'yyyy-MM-dd')
     map.set(dateKey, true)
-  }
-
-  // Добавляем несколько дополнительных активных дней для демонстрации
-  // В реальном приложении это будет приходить из хранилища данных
-  for (let i = userStore.streak; i < 28; i += 3) {
-    const date = subDays(today, i)
-    const dateKey = format(date, 'yyyy-MM-dd')
-    if (!map.has(dateKey)) {
-      map.set(dateKey, true)
-    }
   }
 
   return map

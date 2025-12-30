@@ -5,7 +5,7 @@
       <p class="text-body-2 mb-4">{{ block.content }}</p>
 
         <v-img
-          src="https://img.freepik.com/premium-photo/majestic-lion-wearing-elegant-crown-against-dark-background_626475-6901.jpg?semt=ais_hybrid&w=740"
+          :src="block.image_url"
           class="border-radius-card mb-4"
           max-height="300"
           cover
@@ -36,7 +36,11 @@ defineEmits<{
 }>()
 </script>
 
-
+<style scoped>
+.question-title {
+  white-space: normal;
+}
+</style>
 
 
 

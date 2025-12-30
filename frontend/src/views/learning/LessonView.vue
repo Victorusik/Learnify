@@ -31,15 +31,17 @@
     </v-row>
     <v-row v-else-if="lesson">
       <v-col cols="12">
-        <v-card class="pa-4 text-center">
-          <p class="text-h6 mb-4">Урок завершён! 🎉</p>
-          <v-btn
-            color="primary"
-            @click="completeLesson"
-          >
-            Завершить урок
-          </v-btn>
-        </v-card>
+        <LessonCompletionScreen
+          :lesson-title="lesson.title"
+          :completed-blocks="completedBlocks"
+          :total-blocks="totalBlocks"
+          :progress="progress"
+          :xp-earned="10"
+          :has-next-lesson="hasNextLesson"
+          @next-lesson="goToNextLesson"
+          @back-to-course="goToCourse"
+          @back-to-learning="completeLesson"
+        />
       </v-col>
     </v-row>
   </v-container>
@@ -59,6 +61,7 @@ import PracticeReflection from '@/components/cards/PracticeReflection.vue'
 import PracticeCase from '@/components/cards/PracticeCase.vue'
 import PracticeTextInput from '@/components/cards/PracticeTextInput.vue'
 import ProgressBar from '@/components/ui/ProgressBar.vue'
+import LessonCompletionScreen from '@/components/ui/LessonCompletionScreen.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -94,6 +97,16 @@ const completedBlocks = computed(() => {
 const progress = computed(() => {
   if (totalBlocks.value === 0) return 0
   return (completedBlocks.value / totalBlocks.value) * 100
+})
+
+const hasNextLesson = computed(() => {
+  if (!lesson.value) return false
+  return lesson.value.order < totalLessons.value
+})
+
+const nextLesson = computed(() => {
+  if (!lesson.value || !hasNextLesson.value) return null
+  return mockCourseData.lessons.find(l => l.order === lesson.value!.order + 1)
 })
 
 const getBlockComponent = (block: Block) => {
@@ -143,15 +156,37 @@ const nextBlock = () => {
     }
   }
 
+  // Переходим к следующему блоку или завершаем урок
   if (currentBlockIndex.value < totalBlocks.value - 1) {
     currentBlockIndex.value++
+  } else {
+    // Если это последний блок, увеличиваем индекс за пределы массива,
+    // чтобы currentBlock стал null и показался экран завершения
+    currentBlockIndex.value = totalBlocks.value
   }
 }
 
 const completeLesson = () => {
   coursesStore.completeLesson(lessonId)
   userStore.addXP(10)
+  userStore.incrementCompletedToday()
   router.push('/learning')
+}
+
+const goToNextLesson = () => {
+  if (nextLesson.value) {
+    coursesStore.completeLesson(lessonId)
+    userStore.addXP(10)
+    userStore.incrementCompletedToday()
+    router.push(`/learning/course/${courseId}/lesson/${nextLesson.value.id}`)
+  }
+}
+
+const goToCourse = () => {
+  coursesStore.completeLesson(lessonId)
+  userStore.addXP(10)
+  userStore.incrementCompletedToday()
+  router.push(`/learning/course/${courseId}`)
 }
 
 onMounted(() => {

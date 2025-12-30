@@ -1,7 +1,16 @@
-import axios, { AxiosInstance, AxiosError, AxiosResponse } from 'axios'
+import axios, { type AxiosInstance, AxiosError, type AxiosResponse, type AxiosRequestConfig } from 'axios'
+import { withRetry, type RetryOptions } from '@/utils/retry'
+import { CircuitBreaker } from '@/utils/circuitBreaker'
 
 // Базовый URL API из переменных окружения
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api'
+
+// Circuit breakers для разных типов запросов
+const circuitBreakers = {
+  default: new CircuitBreaker({ failureThreshold: 5, resetTimeout: 30000 }),
+  read: new CircuitBreaker({ failureThreshold: 5, resetTimeout: 30000 }),
+  write: new CircuitBreaker({ failureThreshold: 3, resetTimeout: 60000 })
+}
 
 // Создание экземпляра axios с базовой конфигурацией
 const apiClient: AxiosInstance = axios.create({
@@ -32,12 +41,13 @@ apiClient.interceptors.response.use(
   (response: AxiosResponse) => {
     return response
   },
-  (error: AxiosError) => {
+  (error: AxiosError<{ message?: string; detail?: string }>) => {
     // Обработка различных типов ошибок
     if (error.response) {
       // Сервер ответил с кодом ошибки
       const status = error.response.status
-      const message = error.response.data?.message || error.message
+      const errorData = error.response.data
+      const message = errorData?.message || errorData?.detail || error.message
 
       switch (status) {
         case 401:
@@ -78,16 +88,105 @@ export interface ApiError {
 // Вспомогательная функция для обработки ошибок
 export const handleApiError = (error: unknown): ApiError => {
   if (axios.isAxiosError(error)) {
-    const axiosError = error as AxiosError
+    const axiosError = error as AxiosError<{ detail?: string; message?: string }>
+    const errorData = axiosError.response?.data
     return {
-      message: axiosError.response?.data?.detail || axiosError.message || 'Произошла ошибка',
+      message: errorData?.detail || errorData?.message || axiosError.message || 'Произошла ошибка',
       status: axiosError.response?.status,
-      detail: axiosError.response?.data?.detail,
+      detail: errorData?.detail,
     }
   }
   return {
     message: error instanceof Error ? error.message : 'Неизвестная ошибка',
   }
+}
+
+/**
+ * Выполняет запрос с retry и circuit breaker
+ */
+async function resilientRequest<T>(
+  requestFn: () => Promise<AxiosResponse<T>>,
+  options: {
+    method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH'
+    retryOptions?: RetryOptions
+    circuitBreaker?: CircuitBreaker
+  } = {}
+): Promise<AxiosResponse<T>> {
+  const { method = 'GET', retryOptions, circuitBreaker } = options
+
+  // Выбираем circuit breaker в зависимости от типа запроса
+  const breaker = circuitBreaker ||
+    (method === 'GET' ? circuitBreakers.read : circuitBreakers.write) ||
+    circuitBreakers.default
+
+  // Выполняем через circuit breaker
+  const executeWithBreaker = () => breaker.execute(() => requestFn())
+
+  // Добавляем retry с exponential backoff
+  return withRetry(executeWithBreaker, {
+    maxRetries: 3,
+    initialDelay: 1000,
+    maxDelay: 10000,
+    ...retryOptions
+  })
+}
+
+/**
+ * Обертка для GET запросов с отказоустойчивостью
+ */
+export async function resilientGet<T>(
+  url: string,
+  config?: AxiosRequestConfig,
+  retryOptions?: RetryOptions
+): Promise<AxiosResponse<T>> {
+  return resilientRequest(
+    () => apiClient.get<T>(url, config),
+    { method: 'GET', retryOptions }
+  )
+}
+
+/**
+ * Обертка для POST запросов с отказоустойчивостью
+ */
+export async function resilientPost<T>(
+  url: string,
+  data?: any,
+  config?: AxiosRequestConfig,
+  retryOptions?: RetryOptions
+): Promise<AxiosResponse<T>> {
+  return resilientRequest(
+    () => apiClient.post<T>(url, data, config),
+    { method: 'POST', retryOptions }
+  )
+}
+
+/**
+ * Обертка для PUT запросов с отказоустойчивостью
+ */
+export async function resilientPut<T>(
+  url: string,
+  data?: any,
+  config?: AxiosRequestConfig,
+  retryOptions?: RetryOptions
+): Promise<AxiosResponse<T>> {
+  return resilientRequest(
+    () => apiClient.put<T>(url, data, config),
+    { method: 'PUT', retryOptions }
+  )
+}
+
+/**
+ * Обертка для DELETE запросов с отказоустойчивостью
+ */
+export async function resilientDelete<T>(
+  url: string,
+  config?: AxiosRequestConfig,
+  retryOptions?: RetryOptions
+): Promise<AxiosResponse<T>> {
+  return resilientRequest(
+    () => apiClient.delete<T>(url, config),
+    { method: 'DELETE', retryOptions }
+  )
 }
 
 export default apiClient

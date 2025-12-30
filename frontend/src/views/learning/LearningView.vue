@@ -3,7 +3,7 @@
     <v-row>
       <v-col cols="12">
         <div class="d-flex justify-space-between align-center mb-4">
-          <h2 class="text-h5">Моё обучение</h2>
+          <h2 class="text-h5 font-weight-bold text-primary">Learnify</h2>
           <v-btn
             variant="outlined"
             prepend-icon="mdi-plus"
