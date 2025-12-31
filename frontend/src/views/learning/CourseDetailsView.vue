@@ -1,6 +1,18 @@
 <template>
   <v-container>
-    <v-row v-if="course">
+    <v-row v-if="isLoadingLessons">
+      <v-col cols="12" class="text-center py-8">
+        <v-progress-circular indeterminate color="primary" />
+        <p class="mt-4">Загрузка информации о курсе...</p>
+      </v-col>
+    </v-row>
+    <v-row v-else-if="loadError">
+      <v-col cols="12" class="text-center py-8">
+        <p class="text-error mb-4">{{ loadError }}</p>
+        <v-btn color="primary" @click="router.back()">Вернуться назад</v-btn>
+      </v-col>
+    </v-row>
+    <v-row v-else-if="course">
       <v-col cols="12">
         <v-img
           :src="course.cover_image_url"
@@ -64,23 +76,40 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useCoursesStore } from '@/stores/coursesStore'
-import { mockCourseData } from '@/mocks/mockData'
+import { getCourseLessons } from '@/services/coursesService'
 
 const route = useRoute()
 const router = useRouter()
 const coursesStore = useCoursesStore()
 
 const courseId = route.params.id as string
+const courseLessons = ref<any[]>([])
 
 const course = computed(() => {
-  return coursesStore.availableCourses.find(c => c.course_id === courseId) || mockCourseData.course
+  return coursesStore.availableCourses.find(c => c.course_id === courseId)
 })
 
 const lessons = computed(() => {
-  return mockCourseData.lessons
+  return courseLessons.value
+})
+
+const isLoadingLessons = ref(true)
+const loadError = ref<string | null>(null)
+
+onMounted(async () => {
+  // Загружаем уроки курса
+  try {
+    const lessonsData = await getCourseLessons(courseId)
+    courseLessons.value = lessonsData
+  } catch (error) {
+    console.error('Failed to load course lessons:', error)
+    loadError.value = 'Не удалось загрузить уроки курса'
+  } finally {
+    isLoadingLessons.value = false
+  }
 })
 
 const getLevelColor = (level: string) => {

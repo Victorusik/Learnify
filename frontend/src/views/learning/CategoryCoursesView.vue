@@ -1,6 +1,18 @@
 <template>
   <v-container>
-    <v-row>
+    <v-row v-if="isLoading">
+      <v-col cols="12" class="text-center py-8">
+        <v-progress-circular indeterminate color="primary" />
+        <p class="mt-4">Загрузка курсов...</p>
+      </v-col>
+    </v-row>
+    <v-row v-else-if="loadError">
+      <v-col cols="12" class="text-center py-8">
+        <p class="text-error mb-4">{{ loadError }}</p>
+        <v-btn color="primary" @click="router.back()">Вернуться назад</v-btn>
+      </v-col>
+    </v-row>
+    <v-row v-else>
       <v-col cols="12">
         <div class="d-flex align-center mb-4">
           <v-btn
@@ -31,20 +43,23 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useCoursesStore } from '@/stores/coursesStore'
-import { mockCourseData, mockAdditionalCourses, mockCategories } from '@/mocks/mockData'
+import { getCategories } from '@/services/categoriesService'
+import { getCourses } from '@/services/coursesService'
 import CourseCard from '@/components/ui/CourseCard.vue'
+import type { Category } from '@/types'
 
 const route = useRoute()
 const router = useRouter()
 const coursesStore = useCoursesStore()
 
 const categoryId = route.params.id as string
+const categories = ref<Category[]>([])
 
 const category = computed(() => {
-  return mockCategories.find(c => c.id === categoryId)
+  return categories.value.find(c => c.id === categoryId)
 })
 
 const categoryName = computed(() => {
@@ -52,25 +67,38 @@ const categoryName = computed(() => {
 })
 
 const categoryCourses = computed(() => {
-  const allCourses = [mockCourseData.course, ...mockAdditionalCourses]
-  return allCourses.filter(course => {
-    if (categoryId === 'health') {
-      return course.category === 'Здоровье и продуктивность'
-    }
-    if (categoryId === 'business') {
-      return course.category === 'Бизнес и финансы'
-    }
-    if (categoryId === 'science') {
-      return course.category === 'Наука'
-    }
-    if (categoryId === 'tech') {
-      return course.category === 'Технологии'
-    }
-    if (categoryId === 'mindset') {
-      return course.category === 'Мышление'
-    }
-    return false
+  // Фильтруем курсы по категории
+  return coursesStore.availableCourses.filter(course => {
+    if (!category.value) return false
+    return course.category === category.value.name
   })
+})
+
+const isLoading = ref(true)
+const loadError = ref<string | null>(null)
+
+onMounted(async () => {
+  try {
+    // Загружаем категории
+    const categoriesData = await getCategories()
+    categories.value = categoriesData
+
+    // Загружаем курсы если еще не загружены
+    if (coursesStore.availableCourses.length === 0) {
+      const coursesResponse = await getCourses()
+      // Transform CourseResponse to Course by converting category object to string
+      const courses = coursesResponse.map(course => ({
+        ...course,
+        category: course.category?.name || 'Без категории'
+      }))
+      coursesStore.availableCourses = courses
+    }
+  } catch (error) {
+    console.error('Failed to load data:', error)
+    loadError.value = 'Не удалось загрузить курсы'
+  } finally {
+    isLoading.value = false
+  }
 })
 
 const goToCourse = (courseId: string) => {

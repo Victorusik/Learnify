@@ -3,7 +3,15 @@
     <TrainingHeader @change-goal="router.push('/profile')" />
     <v-row>
       <v-col cols="12">
-        <v-card v-if="currentCard" class="question-card background-transparent" elevation="0">
+        <v-card v-if="isLoading" class="pa-4 text-center">
+          <v-progress-circular indeterminate color="primary" />
+          <p class="mt-4">Загрузка карточек...</p>
+        </v-card>
+        <v-card v-else-if="loadError" class="pa-4 text-center">
+          <p class="text-error mb-4">{{ loadError }}</p>
+          <v-btn color="primary" @click="loadTrainingCards">Попробовать снова</v-btn>
+        </v-card>
+        <v-card v-else-if="currentCard" class="question-card background-transparent" elevation="0">
           <div class="card-header">
             <div class="chips-group">
               <v-chip
@@ -50,6 +58,7 @@ import { useCardsStore } from '@/stores/cardsStore'
 import { useUserStore } from '@/stores/userStore'
 import { useCoursesStore } from '@/stores/coursesStore'
 import type { Block } from '@/types'
+import { getTrainingCards, submitTrainingAnswer } from '@/services/trainingService'
 import TheoryCard from '@/components/cards/TheoryCard.vue'
 import PracticeMultipleChoice from '@/components/cards/PracticeMultipleChoice.vue'
 import PracticeReflection from '@/components/cards/PracticeReflection.vue'
@@ -65,13 +74,33 @@ const coursesStore = useCoursesStore()
 const router = useRouter()
 
 const currentCard = ref<Block | null>(null)
+const isLoading = ref(true)
+const loadError = ref<string | null>(null)
+
+const loadTrainingCards = async () => {
+  isLoading.value = true
+  loadError.value = null
+
+  try {
+    const response = await getTrainingCards()
+    const cards = response.cards
+
+    if (cards.length > 0) {
+      currentCard.value = cards[0]
+      cardsStore.loadCardsFromBackend(cards)
+    } else {
+      currentCard.value = null
+    }
+  } catch (error) {
+    console.error('Failed to load training cards:', error)
+    loadError.value = 'Не удалось загрузить карточки для тренировки'
+  } finally {
+    isLoading.value = false
+  }
+}
 
 onMounted(() => {
-  const cards = cardsStore.getCardsForTraining()
-  if (cards.length > 0) {
-    currentCard.value = cards[0]
-    cardsStore.reviewQueue = cards.slice(1)
-  }
+  loadTrainingCards()
 })
 
 const getCardComponent = (block: Block) => {
@@ -138,16 +167,47 @@ const getTopicInfo = (block: Block): string => {
   return 'Основы квантовой физики • Квантовая запутанность'
 }
 
-const handleAnswer = (isCorrect: boolean) => {
-  if (currentCard.value) {
-    const blockId = `${currentCard.value.type}-${currentCard.value.order}`
-    const repData = cardsStore.spacedRepetitionData.get(blockId)
-    const lessonId = repData?.lessonId || 'lesson_1'
-    const courseId = repData?.courseId || 'TM-INTER-002'
+// Генерирует ID блока если его нет (для mock данных)
+const getBlockId = (block: Block): string => {
+  return block.id || `${block.type}-${block.order}`
+}
 
-    cardsStore.submitAnswer(blockId, isCorrect, lessonId, courseId)
-    if (isCorrect) {
-      userStore.addXP(5)
+const handleAnswer = async (isCorrect: boolean) => {
+  if (currentCard.value) {
+    const blockId = getBlockId(currentCard.value)
+    const repData = cardsStore.spacedRepetitionData.get(blockId)
+
+    // Определяем lesson_id и course_id
+    // Если есть repetition data, используем оттуда, иначе пытаемся найти из активного курса
+    let lessonId = repData?.lessonId
+    let courseId = repData?.courseId
+
+    if (!lessonId || !courseId) {
+      // Пытаемся определить из контекста (если карточка была загружена)
+      // Для новых карточек эта информация должна быть в блоке или в store
+      console.warn('Missing lesson/course context for card, using defaults')
+      lessonId = 'lesson_1'
+      courseId = coursesStore.activeCourse?.course_id || 'TM-INTER-002'
+    }
+
+    try {
+      // Отправляем ответ на бэкенд
+      const response = await submitTrainingAnswer({
+        block_id: blockId,
+        lesson_id: lessonId,
+        course_id: courseId,
+        is_correct: isCorrect
+      })
+
+      // Обновляем локальное состояние из ответа бэкенда
+      cardsStore.updateFromBackendResponse(blockId, lessonId, courseId, response, isCorrect)
+
+      if (isCorrect) {
+        userStore.addXP(5)
+      }
+    } catch (error) {
+      console.error('Failed to submit training answer:', error)
+      alert('Не удалось сохранить ответ. Проверьте подключение к интернету.')
     }
   }
 }

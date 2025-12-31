@@ -1,6 +1,12 @@
 <template>
   <v-container>
-    <v-row>
+    <v-row v-if="isInitializing">
+      <v-col cols="12" class="text-center py-8">
+        <v-progress-circular indeterminate color="primary" />
+        <p class="mt-4">Загрузка курсов...</p>
+      </v-col>
+    </v-row>
+    <v-row v-else>
       <v-col cols="12">
         <div class="d-flex justify-space-between align-center mb-4">
           <h2 class="text-h5 font-weight-bold text-primary">Learnify</h2>
@@ -134,23 +140,33 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useCoursesStore } from '@/stores/coursesStore'
-import { mockCourseData } from '@/mocks/mockData'
+import { useCourses } from '@/composables/useCourses'
 import ProgressBar from '@/components/ui/ProgressBar.vue'
 
 const router = useRouter()
 const coursesStore = useCoursesStore()
+const { initializeCourses } = useCourses()
+const isInitializing = ref(false)
 
-onMounted(() => {
-  // Инициализация данных курса
+onMounted(async () => {
+  // Инициализация данных курса с бэкенда
   if (coursesStore.availableCourses.length === 0) {
-    coursesStore.availableCourses.push(mockCourseData.course)
-    coursesStore.setCourseLessons('TM-INTER-002', mockCourseData.lessons)
-  }
-  if (coursesStore.enrolledCourses.length === 0) {
-    coursesStore.enrollCourse('TM-INTER-002')
+    try {
+      isInitializing.value = true
+      await initializeCourses()
+
+      // Автоматически записываем на первый курс если нет записей
+      if (coursesStore.enrolledCourses.length === 0 && coursesStore.availableCourses.length > 0) {
+        coursesStore.enrollCourse(coursesStore.availableCourses[0].course_id)
+      }
+    } catch (error) {
+      console.error('Failed to initialize courses:', error)
+    } finally {
+      isInitializing.value = false
+    }
   }
 })
 

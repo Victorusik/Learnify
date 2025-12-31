@@ -42,6 +42,7 @@ export type Block = TheoryBlock | PracticeBlock
 
 // Теоретическая карточка
 export interface TheoryBlock {
+  id?: string // Optional for backwards compatibility with mock data
   type: 'theory'
   order: number
   title: string
@@ -52,6 +53,7 @@ export interface TheoryBlock {
 
 // Практическая карточка (4 подтипа)
 export interface PracticeBlock {
+  id?: string // Optional for backwards compatibility with mock data
   type: 'practice'
   subtype: 'multiple_choice' | 'reflection' | 'case' | 'text_input'
   order: number

@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import { addDays, isBefore } from 'date-fns'
 import type { Block, RepetitionData } from '@/types'
+import type { TrainingSubmitResponse } from '@/services/trainingService'
 
 export const useCardsStore = defineStore('cards', () => {
   const allBlocks = ref<Block[]>([])
@@ -119,6 +120,55 @@ export const useCardsStore = defineStore('cards', () => {
     }
   }
 
+  /**
+   * Обновляет данные spaced repetition из ответа бэкенда
+   */
+  const updateFromBackendResponse = (
+    blockId: string,
+    lessonId: string,
+    courseId: string,
+    response: TrainingSubmitResponse,
+    isCorrect: boolean
+  ) => {
+    const data: RepetitionData = {
+      cardId: blockId,
+      lessonId,
+      courseId,
+      lastReview: new Date(),
+      nextReview: new Date(response.next_review),
+      interval: response.interval,
+      easeFactor: 2.5, // Backend doesn't send this back, use default
+      needsReview: response.needs_review,
+      mistakes: 0 // Will be tracked separately
+    }
+
+    const existing = spacedRepetitionData.value.get(blockId)
+    if (existing) {
+      data.mistakes = existing.mistakes + (isCorrect ? 0 : 1)
+    } else {
+      data.mistakes = isCorrect ? 0 : 1
+    }
+
+    spacedRepetitionData.value.set(blockId, data)
+
+    // Обновляем статистику
+    todayStats.value.reviewed += 1
+    if (isCorrect) {
+      todayStats.value.correct += 1
+    }
+    todayStats.value.accuracy = todayStats.value.reviewed > 0
+      ? (todayStats.value.correct / todayStats.value.reviewed) * 100
+      : 0
+  }
+
+  /**
+   * Загружает карточки для тренировки из бэкенда
+   */
+  const loadCardsFromBackend = (cards: Block[]) => {
+    allBlocks.value = cards
+    reviewQueue.value = cards.slice(1)
+  }
+
   return {
     allBlocks,
     reviewQueue,
@@ -128,7 +178,9 @@ export const useCardsStore = defineStore('cards', () => {
     submitAnswer,
     markCardAsReviewed,
     calculateNextReview,
-    initializeBlocks
+    initializeBlocks,
+    updateFromBackendResponse,
+    loadCardsFromBackend
   }
 })
 
