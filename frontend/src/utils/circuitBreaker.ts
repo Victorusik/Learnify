@@ -2,11 +2,13 @@
  * Реализация паттерна Circuit Breaker
  */
 
-export enum CircuitState {
-  CLOSED = 'CLOSED',      // Нормальная работа
-  OPEN = 'OPEN',          // Разомкнут (ошибки)
-  HALF_OPEN = 'HALF_OPEN' // Тестирование восстановления
-}
+export const CircuitState = {
+  CLOSED: 'CLOSED',      // Нормальная работа
+  OPEN: 'OPEN',          // Разомкнут (ошибки)
+  HALF_OPEN: 'HALF_OPEN' // Тестирование восстановления
+} as const
+
+export type CircuitState = typeof CircuitState[keyof typeof CircuitState]
 
 export interface CircuitBreakerOptions {
   failureThreshold?: number      // Порог ошибок для открытия
