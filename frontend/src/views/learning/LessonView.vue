@@ -48,8 +48,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRoute, useRouter } from 'vue-router'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRoute, useRouter, onBeforeRouteUpdate } from 'vue-router'
 import { useCoursesStore } from '@/stores/coursesStore'
 import { useUserStore } from '@/stores/userStore'
 import { useCardsStore } from '@/stores/cardsStore'
@@ -68,11 +68,11 @@ const router = useRouter()
 const coursesStore = useCoursesStore()
 const userStore = useUserStore()
 
-const lessonId = route.params.lessonId as string
-const courseId = route.params.courseId as string
+const lessonId = computed(() => route.params.lessonId as string)
+const courseId = computed(() => route.params.courseId as string)
 
 const lesson = computed(() => {
-  return mockCourseData.lessons.find(l => l.id === lessonId)
+  return mockCourseData.lessons.find(l => l.id === lessonId.value)
 })
 
 const totalLessons = computed(() => {
@@ -91,7 +91,7 @@ const totalBlocks = computed(() => {
 
 const completedBlocks = computed(() => {
   // Отслеживаем изменения Map через обращение к value
-  return coursesStore.lessonsProgress.get(lessonId) || 0
+  return coursesStore.lessonsProgress.get(lessonId.value) || 0
 })
 
 const progress = computed(() => {
@@ -134,13 +134,13 @@ const handleAnswer = (isCorrect: boolean) => {
     // Обновляем прогресс для практики с ответом
     const blockOrder = currentBlock.value.order
     if (!processedBlocks.value.has(blockOrder)) {
-      coursesStore.markBlockCompleted(lessonId)
+      coursesStore.markBlockCompleted(lessonId.value)
       processedBlocks.value.add(blockOrder)
     }
     if (!isCorrect) {
       // Помечаем карточку для повторения
       const blockId = `${currentBlock.value.type}-${currentBlock.value.order}`
-      cardsStore.submitAnswer(blockId, false, lessonId, courseId)
+      cardsStore.submitAnswer(blockId, false, lessonId.value, courseId.value)
     }
   }
 }
@@ -151,7 +151,7 @@ const nextBlock = () => {
     const blockOrder = currentBlock.value.order
     if (!processedBlocks.value.has(blockOrder)) {
       // Карточка еще не обработана (теория или практика без answer-submitted)
-      coursesStore.markBlockCompleted(lessonId)
+      coursesStore.markBlockCompleted(lessonId.value)
       processedBlocks.value.add(blockOrder)
     }
   }
@@ -167,7 +167,7 @@ const nextBlock = () => {
 }
 
 const completeLesson = () => {
-  coursesStore.completeLesson(lessonId)
+  coursesStore.completeLesson(lessonId.value)
   userStore.addXP(10)
   userStore.incrementCompletedToday()
   router.push('/learning')
@@ -175,27 +175,46 @@ const completeLesson = () => {
 
 const goToNextLesson = () => {
   if (nextLesson.value) {
-    coursesStore.completeLesson(lessonId)
+    coursesStore.completeLesson(lessonId.value)
     userStore.addXP(10)
     userStore.incrementCompletedToday()
-    router.push(`/learning/course/${courseId}/lesson/${nextLesson.value.id}`)
+    router.push(`/learning/course/${courseId.value}/lesson/${nextLesson.value.id}`)
   }
 }
 
 const goToCourse = () => {
-  coursesStore.completeLesson(lessonId)
+  coursesStore.completeLesson(lessonId.value)
   userStore.addXP(10)
   userStore.incrementCompletedToday()
-  router.push(`/learning/course/${courseId}`)
+  router.push(`/learning/course/${courseId.value}`)
 }
 
-onMounted(() => {
+const initializeLesson = () => {
   if (lesson.value) {
     coursesStore.currentLesson = lesson.value
     // Инициализируем блоки для тренировки
-    const cardsStore = useCardsStore()
     cardsStore.initializeBlocks(lesson.value.blocks)
+    // Сбрасываем индекс блока и обработанные блоки
+    currentBlockIndex.value = 0
+    processedBlocks.value = new Set()
   }
+}
+
+// Отслеживаем изменения lessonId и сбрасываем состояние
+watch(lessonId, () => {
+  initializeLesson()
+}, { immediate: false })
+
+// Обрабатываем обновление маршрута (когда переходим на новый урок)
+onBeforeRouteUpdate((to) => {
+  const newLessonId = to.params.lessonId as string
+  if (newLessonId !== lessonId.value) {
+    initializeLesson()
+  }
+})
+
+onMounted(() => {
+  initializeLesson()
 })
 </script>
 
