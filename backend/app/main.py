@@ -1,7 +1,15 @@
 from fastapi import FastAPI
+from fastapi.responses import JSONResponse
+
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.api import categories, courses, lessons, user, progress, training, achievements
+from app.middleware.error_handler import GlobalErrorHandler
+from app.database import get_db
+from sqlalchemy.orm import Session
+from sqlalchemy import text
+from fastapi import Depends, status, Response
+
 
 app = FastAPI(title="Learnify API", version="1.0.0")
 
@@ -13,6 +21,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Global Exception Handler
+app.add_middleware(GlobalErrorHandler)
 
 # Include routers
 app.include_router(categories.router, prefix=settings.API_V1_PREFIX, tags=["categories"])
@@ -32,4 +43,24 @@ def root():
 @app.get("/health")
 def health():
     return {"status": "ok"}
+
+
+@app.get("/health/detailed")
+def health_detailed(db: Session = Depends(get_db)):
+    try:
+        db.execute(text("SELECT 1"))
+        return {
+            "status": "ok",
+            "database": "connected",
+            "version": "1.0.0"
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            content={
+                "status": "error",
+                "database": "disconnected",
+                "detail": str(e)
+            }
+        )
 
