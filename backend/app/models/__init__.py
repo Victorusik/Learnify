@@ -1,4 +1,5 @@
 from app.models.user import User
+from app.models.refresh_token import RefreshToken
 from app.models.category import Category
 from app.models.course import Course
 from app.models.lesson import Lesson
@@ -14,6 +15,7 @@ from app.models.progress import (
 
 __all__ = [
     "User",
+    "RefreshToken",
     "Category",
     "Course",
     "Lesson",

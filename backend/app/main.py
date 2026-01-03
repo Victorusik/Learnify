@@ -3,7 +3,7 @@ from fastapi.responses import JSONResponse
 
 from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
-from app.api import categories, courses, lessons, user, progress, training, achievements
+from app.api import categories, courses, lessons, user, progress, training, achievements, auth
 from app.middleware.error_handler import GlobalErrorHandler
 from app.database import get_db
 from sqlalchemy.orm import Session
@@ -26,6 +26,7 @@ app.add_middleware(
 app.add_middleware(GlobalErrorHandler)
 
 # Include routers
+app.include_router(auth.router, prefix=settings.API_V1_PREFIX, tags=["authentication"])
 app.include_router(categories.router, prefix=settings.API_V1_PREFIX, tags=["categories"])
 app.include_router(courses.router, prefix=settings.API_V1_PREFIX, tags=["courses"])
 app.include_router(lessons.router, prefix=settings.API_V1_PREFIX, tags=["lessons"])
