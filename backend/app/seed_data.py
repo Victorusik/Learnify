@@ -7,7 +7,9 @@ from app.models import (
     Category, Course, Lesson, Block, Achievement, User, UserStatistics
 )
 from app.utils.password import hash_password
+
 from datetime import datetime
+from sqlalchemy import text
 
 
 def seed_categories(db: Session):
@@ -59,10 +61,9 @@ def seed_course_tm_inter_002(db: Session):
     existing_course = db.query(Course).filter(Course.course_id == "TM-INTER-002").first()
     if not existing_course:
         course = Course(
-            type="course",
             course_id="TM-INTER-002",
             title="Архитектор Времени: Системный подход и Глубокая работа",
-            category="Здоровье и продуктивность",
+            category_id="health",
             subcategory="Продвинутый тайм-менеджмент",
             level="Средний",
             difficulty_score=4,
@@ -405,6 +406,11 @@ def seed_default_user(db: Session):
             total_cards_reviewed=1245
         )
         db.add(stats)
+        db.commit()
+
+        
+        # Reset the ID sequence to avoid duplicate key errors on next insert
+        db.execute(text("SELECT setval(pg_get_serial_sequence('users', 'id'), coalesce(max(id), 0) + 1, false) FROM users;"))
         db.commit()
         print("Default user seeded")
 
