@@ -110,7 +110,8 @@ const completedBlocks = computed(() => {
 
 const progress = computed(() => {
   if (totalBlocks.value === 0) return 0
-  return (completedBlocks.value / totalBlocks.value) * 100
+  const calculatedProgress = (completedBlocks.value / totalBlocks.value) * 100
+  return Math.min(calculatedProgress, 100)
 })
 
 const hasNextLesson = computed(() => {

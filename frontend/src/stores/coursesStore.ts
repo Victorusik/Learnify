@@ -41,6 +41,15 @@ export const useCoursesStore = defineStore('courses', () => {
 
   const markBlockCompleted = (lessonId: string, /* blockOrder: number */) => {
     const current = lessonsProgress.value.get(lessonId) || 0
+    // Проверяем, не завершен ли урок на 100%
+    if (currentLesson.value && currentLesson.value.id === lessonId) {
+      const total = currentLesson.value.blocks.length
+      const currentProgress = total > 0 ? (current / total) * 100 : 0
+      // Если прогресс уже 100%, не увеличиваем счетчик
+      if (currentProgress >= 100) {
+        return
+      }
+    }
     const newMap = new Map(lessonsProgress.value)
     newMap.set(lessonId, current + 1)
     lessonsProgress.value = newMap
@@ -52,7 +61,8 @@ export const useCoursesStore = defineStore('courses', () => {
     }
     const completed = lessonsProgress.value.get(lessonId) || 0
     const total = currentLesson.value.blocks.length
-    return total > 0 ? (completed / total) * 100 : 0
+    const progress = total > 0 ? (completed / total) * 100 : 0
+    return Math.min(progress, 100)
   }
 
   const getCourseProgress = (courseId: string): number => {
@@ -74,7 +84,8 @@ export const useCoursesStore = defineStore('courses', () => {
       }
     })
 
-    return totalLessons > 0 ? (totalLessonsCompleted / totalLessons) * 100 : 0
+    const progress = totalLessons > 0 ? (totalLessonsCompleted / totalLessons) * 100 : 0
+    return Math.min(progress, 100)
   }
 
   const getCurrentLesson = (): LessonListItem | null => {

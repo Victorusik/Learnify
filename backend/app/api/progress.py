@@ -17,7 +17,7 @@ def get_progress(db: Session = Depends(get_db)):
     progress_items = db.query(UserProgress).filter(
         UserProgress.user_id == DEFAULT_USER_ID
     ).all()
-    
+
     return {
         "total_blocks_completed": len(progress_items),
         "progress": [
@@ -43,13 +43,13 @@ def mark_block_completed(
         UserProgress.user_id == DEFAULT_USER_ID,
         UserProgress.block_id == progress_data.block_id
     ).first()
-    
+
     if existing:
         return ProgressResponse(
             message="Block already completed",
             block_id=progress_data.block_id
         )
-    
+
     # Создаем запись о прогрессе
     user_progress = UserProgress(
         user_id=DEFAULT_USER_ID,
@@ -60,10 +60,10 @@ def mark_block_completed(
     )
     db.add(user_progress)
     db.commit()
-    
+
     # Проверяем достижения
     check_and_unlock_achievements(db, DEFAULT_USER_ID)
-    
+
     return ProgressResponse(
         message="Block marked as completed",
         block_id=progress_data.block_id
@@ -79,14 +79,14 @@ def mark_lesson_completed(
     # Получаем все блоки урока
     from app.models import Block
     blocks = db.query(Block).filter(Block.lesson_id == progress_data.lesson_id).all()
-    
+
     # Отмечаем все блоки как завершенные
     for block in blocks:
         existing = db.query(UserProgress).filter(
             UserProgress.user_id == DEFAULT_USER_ID,
             UserProgress.block_id == block.id
         ).first()
-        
+
         if not existing:
             user_progress = UserProgress(
                 user_id=DEFAULT_USER_ID,
@@ -96,12 +96,12 @@ def mark_lesson_completed(
                 completed_at=datetime.utcnow()
             )
             db.add(user_progress)
-    
+
     db.commit()
-    
+
     # Проверяем достижения
     check_and_unlock_achievements(db, DEFAULT_USER_ID)
-    
+
     return ProgressResponse(
         message="Lesson marked as completed",
         lesson_id=progress_data.lesson_id
