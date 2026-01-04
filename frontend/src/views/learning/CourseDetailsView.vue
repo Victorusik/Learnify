@@ -57,7 +57,7 @@
               v-for="lesson in lessons"
               :key="lesson.id"
               :title="`${lesson.order}. ${lesson.title}`"
-              :subtitle="`${lesson.blocks.length} блоков`"
+              :subtitle="lesson.description"
             />
           </v-list>
         </div>

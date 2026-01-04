@@ -17,7 +17,7 @@ export function useCourses() {
         for (const course of courses) {
           try {
             const lessons = await getCourseLessons(course.course_id)
-            // store.setCourseLessons(course.course_id, lessons)
+            store.setCourseLessons(course.course_id, lessons)
           } catch (error) {
             console.error(`Failed to load lessons for course ${course.course_id}:`, error)
           }
@@ -59,8 +59,3 @@ export function useCourses() {
     getLessonProgress
   }
 }
-
-
-
-
-

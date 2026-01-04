@@ -14,14 +14,15 @@ def get_lesson(lesson_id: str, db: Session = Depends(get_db)):
     lesson = db.query(Lesson).filter(Lesson.id == lesson_id).first()
     if not lesson:
         raise HTTPException(status_code=404, detail="Lesson not found")
-    
+
     blocks = db.query(Block).filter(Block.lesson_id == lesson_id).order_by(Block.order).all()
-    
+
     # Преобразуем блоки в правильный формат
     block_responses = []
     for block in blocks:
         if block.type == "theory":
             block_responses.append(TheoryBlockResponse(
+                id=block.id,
                 type=block.type,
                 order=block.order,
                 title=block.title,
@@ -30,6 +31,7 @@ def get_lesson(lesson_id: str, db: Session = Depends(get_db)):
             ))
         else:
             block_responses.append(PracticeBlockResponse(
+                id=block.id,
                 type=block.type,
                 subtype=block.subtype or "",
                 order=block.order,
@@ -43,7 +45,7 @@ def get_lesson(lesson_id: str, db: Session = Depends(get_db)):
                 answer=block.answer,
                 sample_answer=block.sample_answer
             ))
-    
+
     lesson_response = LessonResponse(
         id=lesson.id,
         course_id=lesson.course_id,
@@ -52,6 +54,6 @@ def get_lesson(lesson_id: str, db: Session = Depends(get_db)):
         description=lesson.description,
         blocks=block_responses
     )
-    
+
     return lesson_response
 

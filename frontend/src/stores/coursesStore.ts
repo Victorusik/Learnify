@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { ref } from 'vue'
 import type { Course, Lesson } from '@/types'
 import type { UserProgressResponse } from '@/services/progressService'
+import type { LessonListItem } from '@/services/coursesService'
 
 export const useCoursesStore = defineStore('courses', () => {
   const activeCourse = ref<Course | null>(null)
@@ -11,13 +12,13 @@ export const useCoursesStore = defineStore('courses', () => {
   const currentLesson = ref<Lesson | null>(null)
   const lessonsProgress = ref<Map<string, number>>(new Map())
 
-  const courseLessons = ref<Map<string, Lesson[]>>(new Map())
+  const courseLessons = ref<Map<string, LessonListItem[]>>(new Map())
 
-  const getCourseLessons = (courseId: string): Lesson[] => {
+  const getCourseLessons = (courseId: string): LessonListItem[] => {
     return courseLessons.value.get(courseId) || []
   }
 
-  const setCourseLessons = (courseId: string, lessons: Lesson[]) => {
+  const setCourseLessons = (courseId: string, lessons: LessonListItem[]) => {
     courseLessons.value.set(courseId, lessons)
   }
 
@@ -61,21 +62,28 @@ export const useCoursesStore = defineStore('courses', () => {
     const lessons = getCourseLessons(courseId)
     if (lessons.length === 0) return 0
 
-    let totalBlocks = 0
-    let completedBlocks = 0
+    // Calculate progress based on completed lessons
+    // We use lessonsProgress which tracks completed blocks per lesson
+    let totalLessonsCompleted = 0
+    let totalLessons = lessons.length
 
     lessons.forEach(lesson => {
-      totalBlocks += lesson.blocks.length
-      completedBlocks += lessonsProgress.value.get(lesson.id) || 0
+      // If lesson is marked as completed, count it
+      if (completedLessons.value.includes(lesson.id)) {
+        totalLessonsCompleted += 1
+      }
     })
 
-    return totalBlocks > 0 ? (completedBlocks / totalBlocks) * 100 : 0
+    return totalLessons > 0 ? (totalLessonsCompleted / totalLessons) * 100 : 0
   }
 
-  const getCurrentLesson = (): Lesson | null => {
+  const getCurrentLesson = (): LessonListItem | null => {
     if (!activeCourse.value) return null
 
     const lessons = getCourseLessons(activeCourse.value.course_id)
+    if (lessons.length === 0) return null
+
+    // Return the first incomplete lesson
     for (const lesson of lessons) {
       if (!completedLessons.value.includes(lesson.id)) {
         return lesson

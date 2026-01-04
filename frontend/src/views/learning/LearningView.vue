@@ -218,8 +218,8 @@ const getLessonItemClass = (lessonId: string): string => {
 }
 
 const getLessonDuration = (lesson: any): string => {
-  const duration = lesson.blocks.length * 2
-  return `${duration} мин`
+  // LessonListItem doesn't have blocks, use a default duration
+  return '~10 мин'
 }
 
 const continueCourse = () => {

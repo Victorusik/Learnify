@@ -23,7 +23,6 @@ class LessonListItem(BaseModel):
     order: int
     title: str
     description: str
-    blocks: List[BlockResponse] = []
 
     class Config:
         from_attributes = True
