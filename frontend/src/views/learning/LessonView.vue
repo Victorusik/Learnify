@@ -105,7 +105,6 @@ const totalBlocks = computed(() => {
 })
 
 const completedBlocks = computed(() => {
-  // Отслеживаем изменения Map через обращение к value
   return coursesStore.lessonsProgress.get(lessonId.value) || 0
 })
 
@@ -145,7 +144,6 @@ const cardsStore = useCardsStore()
 const processedBlocks = ref<Set<number>>(new Set())
 const savingProgress = ref(false)
 
-// Генерирует ID блока если его нет (для mock данных)
 const getBlockId = (block: Block): string => {
   return block.id || `${lessonId.value}_block_${block.order}`
 }
@@ -158,19 +156,16 @@ const handleAnswer = async (isCorrect: boolean) => {
         savingProgress.value = true
         const blockId = getBlockId(currentBlock.value)
 
-        // Отправляем прогресс на бэкенд
         await markBlockCompleted({
           block_id: blockId,
           lesson_id: lessonId.value,
           course_id: courseId.value
         })
 
-        // Обновляем локальное состояние после успешного сохранения
         coursesStore.markBlockCompleted(lessonId.value)
         processedBlocks.value.add(blockOrder)
       } catch (error) {
         console.error('Failed to save block progress:', error)
-        // Показываем ошибку пользователю, но продолжаем работу
         alert('Не удалось сохранить прогресс. Проверьте подключение к интернету.')
       } finally {
         savingProgress.value = false
@@ -178,7 +173,6 @@ const handleAnswer = async (isCorrect: boolean) => {
     }
 
     if (!isCorrect) {
-      // Помечаем карточку для повторения
       const blockId = getBlockId(currentBlock.value)
       cardsStore.submitAnswer(blockId, false, lessonId.value, courseId.value)
     }
@@ -186,7 +180,6 @@ const handleAnswer = async (isCorrect: boolean) => {
 }
 
 const nextBlock = async () => {
-  // Обновляем прогресс для карточек, которые еще не были обработаны
   if (currentBlock.value && !savingProgress.value) {
     const blockOrder = currentBlock.value.order
     if (!processedBlocks.value.has(blockOrder)) {
@@ -194,14 +187,12 @@ const nextBlock = async () => {
         savingProgress.value = true
         const blockId = getBlockId(currentBlock.value)
 
-        // Отправляем прогресс на бэкенд
         await markBlockCompleted({
           block_id: blockId,
           lesson_id: lessonId.value,
           course_id: courseId.value
         })
 
-        // Карточка еще не обработана (теория или практика без answer-submitted)
         coursesStore.markBlockCompleted(lessonId.value)
         processedBlocks.value.add(blockOrder)
       } catch (error) {
@@ -213,19 +204,15 @@ const nextBlock = async () => {
     }
   }
 
-  // Переходим к следующему блоку или завершаем урок
   if (currentBlockIndex.value < totalBlocks.value - 1) {
     currentBlockIndex.value++
   } else {
-    // Если это последний блок, увеличиваем индекс за пределы массива,
-    // чтобы currentBlock стал null и показался экран завершения
     currentBlockIndex.value = totalBlocks.value
   }
 }
 
 const completeLesson = async () => {
   try {
-    // Отправляем завершение урока на бэкенд
     await markLessonCompleted({
       lesson_id: lessonId.value,
       course_id: courseId.value
@@ -244,7 +231,6 @@ const completeLesson = async () => {
 const goToNextLesson = async () => {
   if (nextLesson.value) {
     try {
-      // Отправляем завершение урока на бэкенд
       await markLessonCompleted({
         lesson_id: lessonId.value,
         course_id: courseId.value
@@ -263,7 +249,6 @@ const goToNextLesson = async () => {
 
 const goToCourse = async () => {
   try {
-    // Отправляем завершение урока на бэкенд
     await markLessonCompleted({
       lesson_id: lessonId.value,
       course_id: courseId.value
@@ -284,20 +269,16 @@ const loadLessonData = async () => {
   lessonLoadError.value = null
 
   try {
-    // Загружаем данные урока
     const lessonData = await getLesson(lessonId.value)
     lesson.value = lessonData
 
-    // Загружаем список уроков курса для навигации
     try {
       const lessons = await getCourseLessons(courseId.value)
       courseLessons.value = lessons
     } catch (error) {
       console.error('Failed to load course lessons:', error)
-      // Продолжаем работу даже если не удалось загрузить список уроков
     }
 
-    // Инициализируем урок
     coursesStore.currentLesson = lessonData
     cardsStore.initializeBlocks(lessonData.blocks)
     currentBlockIndex.value = 0
@@ -314,12 +295,10 @@ const initializeLesson = () => {
   loadLessonData()
 }
 
-// Отслеживаем изменения lessonId и сбрасываем состояние
 watch(lessonId, () => {
   initializeLesson()
 }, { immediate: false })
 
-// Обрабатываем обновление маршрута (когда переходим на новый урок)
 onBeforeRouteUpdate((to) => {
   const newLessonId = to.params.lessonId as string
   if (newLessonId !== lessonId.value) {

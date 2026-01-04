@@ -167,7 +167,6 @@ const getTopicInfo = (block: Block): string => {
   return 'Основы квантовой физики • Квантовая запутанность'
 }
 
-// Генерирует ID блока если его нет (для mock данных)
 const getBlockId = (block: Block): string => {
   return block.id || `${block.type}-${block.order}`
 }
@@ -177,21 +176,16 @@ const handleAnswer = async (isCorrect: boolean) => {
     const blockId = getBlockId(currentCard.value)
     const repData = cardsStore.spacedRepetitionData.get(blockId)
 
-    // Определяем lesson_id и course_id
-    // Если есть repetition data, используем оттуда, иначе пытаемся найти из активного курса
     let lessonId = repData?.lessonId
     let courseId = repData?.courseId
 
     if (!lessonId || !courseId) {
-      // Пытаемся определить из контекста (если карточка была загружена)
-      // Для новых карточек эта информация должна быть в блоке или в store
       console.warn('Missing lesson/course context for card, using defaults')
       lessonId = 'lesson_1'
       courseId = coursesStore.activeCourse?.course_id || 'TM-INTER-002'
     }
 
     try {
-      // Отправляем ответ на бэкенд
       const response = await submitTrainingAnswer({
         block_id: blockId,
         lesson_id: lessonId,
@@ -199,7 +193,6 @@ const handleAnswer = async (isCorrect: boolean) => {
         is_correct: isCorrect
       })
 
-      // Обновляем локальное состояние из ответа бэкенда
       cardsStore.updateFromBackendResponse(blockId, lessonId, courseId, response, isCorrect)
 
       if (isCorrect) {

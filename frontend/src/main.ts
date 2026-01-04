@@ -14,7 +14,6 @@ app.use(pinia)
 app.use(router)
 app.use(vuetify)
 
-// Инициализация данных
 const { initializeCourses } = useCourses()
 initializeCourses()
 

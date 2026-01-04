@@ -22,7 +22,6 @@ export const useCardsStore = defineStore('cards', () => {
   const calculateNextReview = (cardId: string, isCorrect: boolean): Date => {
     const data = spacedRepetitionData.value.get(cardId)
     if (!data) {
-      // Первое повторение
       return addDays(new Date(), 1)
     }
 
@@ -30,16 +29,13 @@ export const useCardsStore = defineStore('cards', () => {
     let newEaseFactor = data.easeFactor || 2.5
 
     if (isCorrect) {
-      // Увеличиваем интервал
       newInterval = Math.floor(newInterval * newEaseFactor)
       newEaseFactor = Math.min(newEaseFactor + 0.1, 2.5)
     } else {
-      // Уменьшаем интервал при ошибке
       newInterval = Math.max(1, Math.floor(newInterval / 2))
       newEaseFactor = Math.max(1.3, newEaseFactor - 0.2)
     }
 
-    // Ограничиваем интервалы: 1, 7, 16, 35 дней
     const intervals = [1, 7, 16, 35]
     const closestInterval = intervals.reduce((prev, curr) => {
       return Math.abs(curr - newInterval) < Math.abs(prev - newInterval) ? curr : prev
@@ -53,30 +49,26 @@ export const useCardsStore = defineStore('cards', () => {
     const now = new Date()
     const cards: Block[] = []
 
-    // Приоритет 1: needs_review = true
     const needsReview = allBlocks.value.filter(block => {
       const data = spacedRepetitionData.value.get(`${block.type}-${block.order}`)
       return data?.needsReview === true
     })
 
-    // Приоритет 2: наступило время повторения
     const dueForReview = allBlocks.value.filter(block => {
       const data = spacedRepetitionData.value.get(`${block.type}-${block.order}`)
       if (!data || data.needsReview) return false
       return data.nextReview && isBefore(data.nextReview, now)
     })
 
-    // Приоритет 3: 1-2 новые карточки
     const newCards = allBlocks.value.filter(block => {
       return !spacedRepetitionData.value.has(`${block.type}-${block.order}`)
     }).slice(0, 2)
 
-    // Объединяем по приоритетам
     cards.push(...needsReview.slice(0, 5))
     cards.push(...dueForReview.slice(0, 5))
     cards.push(...newCards)
 
-    return cards.slice(0, 10) // Максимум 10 карточек за раз
+    return cards.slice(0, 10)
   }
 
   const submitAnswer = (blockId: string, isCorrect: boolean, lessonId: string, courseId: string) => {
@@ -103,7 +95,6 @@ export const useCardsStore = defineStore('cards', () => {
 
     spacedRepetitionData.value.set(blockId, data)
 
-    // Обновляем статистику
     todayStats.value.reviewed += 1
     if (isCorrect) {
       todayStats.value.correct += 1
@@ -120,9 +111,6 @@ export const useCardsStore = defineStore('cards', () => {
     }
   }
 
-  /**
-   * Обновляет данные spaced repetition из ответа бэкенда
-   */
   const updateFromBackendResponse = (
     blockId: string,
     lessonId: string,
@@ -137,9 +125,9 @@ export const useCardsStore = defineStore('cards', () => {
       lastReview: new Date(),
       nextReview: new Date(response.next_review),
       interval: response.interval,
-      easeFactor: 2.5, // Backend doesn't send this back, use default
+      easeFactor: 2.5,
       needsReview: response.needs_review,
-      mistakes: 0 // Will be tracked separately
+      mistakes: 0
     }
 
     const existing = spacedRepetitionData.value.get(blockId)
@@ -151,7 +139,6 @@ export const useCardsStore = defineStore('cards', () => {
 
     spacedRepetitionData.value.set(blockId, data)
 
-    // Обновляем статистику
     todayStats.value.reviewed += 1
     if (isCorrect) {
       todayStats.value.correct += 1
@@ -161,9 +148,6 @@ export const useCardsStore = defineStore('cards', () => {
       : 0
   }
 
-  /**
-   * Загружает карточки для тренировки из бэкенда
-   */
   const loadCardsFromBackend = (cards: Block[]) => {
     allBlocks.value = cards
     reviewQueue.value = cards.slice(1)

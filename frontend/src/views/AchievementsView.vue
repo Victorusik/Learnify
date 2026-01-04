@@ -61,12 +61,10 @@ import { subDays, format } from 'date-fns'
 const userStore = useUserStore()
 const achievementsStore = useAchievementsStore()
 
-// Генерируем данные активности для календаря на основе текущей серии
 const activityMap = computed(() => {
   const map = new Map<string, boolean>()
   const today = new Date()
 
-  // Помечаем только дни текущей серии как активные
   for (let i = 0; i < userStore.streak && i < 28; i++) {
     const date = subDays(today, i)
     const dateKey = format(date, 'yyyy-MM-dd')

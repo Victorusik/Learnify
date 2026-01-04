@@ -152,13 +152,11 @@ const { initializeCourses } = useCourses()
 const isInitializing = ref(false)
 
 onMounted(async () => {
-  // Инициализация данных курса с бэкенда
   if (coursesStore.availableCourses.length === 0) {
     try {
       isInitializing.value = true
       await initializeCourses()
 
-      // Автоматически записываем на первый курс если нет записей
       if (coursesStore.enrolledCourses.length === 0 && coursesStore.availableCourses.length > 0) {
         coursesStore.enrollCourse(coursesStore.availableCourses[0].course_id)
       }
@@ -220,7 +218,6 @@ const getLessonItemClass = (lessonId: string): string => {
 }
 
 const getLessonDuration = (lesson: any): string => {
-  // Примерная длительность: ~2 минуты на блок
   const duration = lesson.blocks.length * 2
   return `${duration} мин`
 }

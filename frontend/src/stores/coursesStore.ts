@@ -40,7 +40,6 @@ export const useCoursesStore = defineStore('courses', () => {
 
   const markBlockCompleted = (lessonId: string, /* blockOrder: number */) => {
     const current = lessonsProgress.value.get(lessonId) || 0
-    // Создаем новую Map для реактивности
     const newMap = new Map(lessonsProgress.value)
     newMap.set(lessonId, current + 1)
     lessonsProgress.value = newMap
@@ -91,27 +90,19 @@ export const useCoursesStore = defineStore('courses', () => {
     }
   }
 
-  /**
-   * Загружает прогресс с бэкенда и синхронизирует с локальным состоянием
-   */
   const loadProgressFromBackend = (progress: UserProgressResponse) => {
     const lessonsProgressMap = new Map<string, number>()
     const completedLessonsSet = new Set<string>()
 
-    // Группируем блоки по урокам
     progress.progress.forEach(item => {
       const current = lessonsProgressMap.get(item.lesson_id) || 0
       lessonsProgressMap.set(item.lesson_id, current + 1)
     })
 
-    // Обновляем реактивное состояние
     lessonsProgress.value = lessonsProgressMap
     completedLessons.value = Array.from(completedLessonsSet)
   }
 
-  /**
-   * Синхронизирует завершенные уроки
-   */
   const syncCompletedLessons = (lessons: string[]) => {
     completedLessons.value = lessons
   }

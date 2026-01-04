@@ -97,7 +97,6 @@ const handleLogin = async () => {
 
   try {
     await userStore.login(email.value, password.value)
-    // Ждем следующий тик, чтобы токен точно сохранился и computed обновился
     await nextTick()
     router.push('/main')
   } catch (err: any) {

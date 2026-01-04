@@ -8,7 +8,6 @@ export const useUserStore = defineStore('user', () => {
   const user = ref<UserProfile | null>(null)
   const lastStreakUpdateDate = ref<string | null>(null)
 
-  // Computed свойства на основе данных пользователя
   const name = computed(() => user.value?.name || '')
   const level = computed(() => user.value?.level || 1)
   const xp = computed(() => user.value?.xp || 0)
@@ -72,7 +71,6 @@ export const useUserStore = defineStore('user', () => {
 
     user.value.completed_today += 1
 
-    // Проверяем, достигнута ли цель и не был ли стрик уже увеличен сегодня
     const today = format(new Date(), 'yyyy-MM-dd')
     const wasStreakUpdatedToday = lastStreakUpdateDate.value === today
 
@@ -82,15 +80,12 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  // Методы авторизации
   const login = async (email: string, password: string) => {
     await authService.login(email, password)
-    // Профиль загрузится автоматически в App.vue после редиректа
   }
 
   const register = async (email: string, password: string, name: string) => {
     await authService.register(email, password, name)
-    // Профиль загрузится автоматически в App.vue после редиректа
   }
 
   const logout = () => {
