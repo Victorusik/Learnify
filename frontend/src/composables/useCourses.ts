@@ -1,5 +1,6 @@
 import { useCoursesStore } from '@/stores/coursesStore'
 import { getCourses, getCourseLessons, enrollCourse as apiEnrollCourse, getEnrolledCourses } from '@/services/coursesService'
+import type { Course } from '@/types'
 
 export function useCourses() {
   const store = useCoursesStore()
@@ -58,15 +59,16 @@ export function useCourses() {
           // Если курс не найден в загруженных, используем данные из ответа API
           if (!course && firstEnrolledCourse) {
             // Преобразуем данные из API в формат Course
-            course = {
+            const newCourse: Course = {
               ...firstEnrolledCourse,
               category: firstEnrolledCourse.category?.name || 'Без категории'
-            } as any
+            } as Course
             // Добавляем курс в список доступных, если его там нет
             const existingIndex = store.availableCourses.findIndex(c => c.course_id === firstEnrolledCourse.course_id)
             if (existingIndex === -1) {
-              store.availableCourses.push(course)
+              store.availableCourses.push(newCourse)
             }
+            course = newCourse
           }
 
           if (course) {
