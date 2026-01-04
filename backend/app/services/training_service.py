@@ -1,12 +1,12 @@
 from datetime import datetime
-from sqlalchemy.orm import Session
-from sqlalchemy import and_, or_
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import and_, or_, select
 from typing import List
 from app.models import Block, RepetitionData
 from app.utils.spaced_repetition import calculate_next_review
 
 
-def get_cards_for_training(db: Session, user_id: int, limit: int = 10) -> List[Block]:
+async def get_cards_for_training(db: AsyncSession, user_id: int, limit: int = 10) -> List[Block]:
     """
     Получает карточки для тренировки с приоритетами:
     1. needs_review = true
@@ -17,53 +17,64 @@ def get_cards_for_training(db: Session, user_id: int, limit: int = 10) -> List[B
     cards: List[Block] = []
     
 
-    needs_review_data = db.query(RepetitionData).filter(
-        and_(
-            RepetitionData.user_id == user_id,
-            RepetitionData.needs_review == True
-        )
-    ).limit(5).all()
+    result = await db.execute(
+        select(RepetitionData).filter(
+            and_(
+                RepetitionData.user_id == user_id,
+                RepetitionData.needs_review == True
+            )
+        ).limit(5)
+    )
+    needs_review_data = result.scalars().all()
     
-    needs_review_blocks = [
-        db.query(Block).filter(Block.id == rd.block_id).first()
-        for rd in needs_review_data
-        if db.query(Block).filter(Block.id == rd.block_id).first()
-    ]
+    needs_review_blocks = []
+    for rd in needs_review_data:
+        result = await db.execute(select(Block).filter(Block.id == rd.block_id))
+        block = result.scalar_one_or_none()
+        if block:
+            needs_review_blocks.append(block)
     cards.extend(needs_review_blocks)
     
 
-    due_review_data = db.query(RepetitionData).filter(
-        and_(
-            RepetitionData.user_id == user_id,
-            RepetitionData.needs_review == False,
-            RepetitionData.next_review <= now
-        )
-    ).limit(5).all()
+    result = await db.execute(
+        select(RepetitionData).filter(
+            and_(
+                RepetitionData.user_id == user_id,
+                RepetitionData.needs_review == False,
+                RepetitionData.next_review <= now
+            )
+        ).limit(5)
+    )
+    due_review_data = result.scalars().all()
     
-    due_review_blocks = [
-        db.query(Block).filter(Block.id == rd.block_id).first()
-        for rd in due_review_data
-        if db.query(Block).filter(Block.id == rd.block_id).first()
-    ]
+    due_review_blocks = []
+    for rd in due_review_data:
+        result = await db.execute(select(Block).filter(Block.id == rd.block_id))
+        block = result.scalar_one_or_none()
+        if block:
+            due_review_blocks.append(block)
     cards.extend(due_review_blocks)
     
 
-    existing_block_ids = {
-        rd.block_id for rd in db.query(RepetitionData).filter(
-            RepetitionData.user_id == user_id
-        ).all()
-    }
+    result = await db.execute(
+        select(RepetitionData).filter(RepetitionData.user_id == user_id)
+    )
+    existing_block_ids = {rd.block_id for rd in result.scalars().all()}
     
-    new_blocks = db.query(Block).filter(
-        ~Block.id.in_(existing_block_ids)
-    ).limit(2).all()
+    if existing_block_ids:
+        result = await db.execute(
+            select(Block).filter(~Block.id.in_(existing_block_ids)).limit(2)
+        )
+    else:
+        result = await db.execute(select(Block).limit(2))
+    new_blocks = result.scalars().all()
     cards.extend(new_blocks)
     
     return cards[:limit]
 
 
-def submit_answer(
-    db: Session,
+async def submit_answer(
+    db: AsyncSession,
     user_id: int,
     block_id: str,
     lesson_id: str,
@@ -73,12 +84,15 @@ def submit_answer(
     """
     Обрабатывает ответ пользователя и обновляет данные spaced repetition
     """
-    repetition_data = db.query(RepetitionData).filter(
-        and_(
-            RepetitionData.user_id == user_id,
-            RepetitionData.block_id == block_id
+    result = await db.execute(
+        select(RepetitionData).filter(
+            and_(
+                RepetitionData.user_id == user_id,
+                RepetitionData.block_id == block_id
+            )
         )
-    ).first()
+    )
+    repetition_data = result.scalar_one_or_none()
     
     if not repetition_data:
         repetition_data = RepetitionData(
@@ -113,8 +127,8 @@ def submit_answer(
     else:
         repetition_data.needs_review = False
     
-    db.commit()
-    db.refresh(repetition_data)
+    await db.commit()
+    await db.refresh(repetition_data)
     
     return repetition_data
 

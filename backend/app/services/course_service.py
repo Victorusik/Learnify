@@ -1,14 +1,16 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from typing import Optional, List
 from app.models import Course, Lesson, Block, UserCourse, UserProgress
 
 
-def get_course_progress(db: Session, user_id: int, course_id: str) -> float:
+async def get_course_progress(db: AsyncSession, user_id: int, course_id: str) -> float:
     """
     Рассчитывает прогресс пользователя по курсу в процентах
     """
 
-    lessons = db.query(Lesson).filter(Lesson.course_id == course_id).all()
+    result = await db.execute(select(Lesson).filter(Lesson.course_id == course_id))
+    lessons = result.scalars().all()
 
     if not lessons:
         return 0.0
@@ -17,15 +19,19 @@ def get_course_progress(db: Session, user_id: int, course_id: str) -> float:
     completed_blocks = 0
 
     for lesson in lessons:
-        blocks = db.query(Block).filter(Block.lesson_id == lesson.id).all()
+        result = await db.execute(select(Block).filter(Block.lesson_id == lesson.id))
+        blocks = result.scalars().all()
         total_blocks += len(blocks)
 
         for block in blocks:
 
-            progress = db.query(UserProgress).filter(
-                UserProgress.user_id == user_id,
-                UserProgress.block_id == block.id
-            ).first()
+            result = await db.execute(
+                select(UserProgress).filter(
+                    UserProgress.user_id == user_id,
+                    UserProgress.block_id == block.id
+                )
+            )
+            progress = result.scalar_one_or_none()
             if progress:
                 completed_blocks += 1
 

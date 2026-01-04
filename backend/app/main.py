@@ -5,37 +5,38 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.api import categories, courses, lessons, user, progress, training, achievements, auth
 from app.middleware.error_handler import GlobalErrorHandler
-from app.database import get_db, Base, engine, SessionLocal
+from app.database import get_db, Base, engine, AsyncSessionLocal
 from app import models  # Force import of all models
 from app.models import Category
-from sqlalchemy.orm import Session
-from sqlalchemy import text
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, text
 from fastapi import Depends, status
 
 
 app = FastAPI(title="Learnify API", version="1.0.0")
 
 @app.on_event("startup")
-def on_startup():
-    Base.metadata.create_all(bind=engine)
+async def on_startup():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
 
 
-    db = SessionLocal()
-    try:
+    async with AsyncSessionLocal() as db:
+        try:
 
-        category_count = db.query(Category).count()
-        if category_count == 0:
-            print("Database is empty, loading seed data...")
-            from app.seed_data import main
-            main()
-            print("Seed data loaded successfully!")
-        else:
-            print(f"Database already contains data ({category_count} categories), skipping seed data.")
-    except Exception as e:
-        print(f"Error loading seed data: {e}")
-
-    finally:
-        db.close()
+            result = await db.execute(select(Category))
+            categories = result.scalars().all()
+            category_count = len(categories)
+            if category_count == 0:
+                print("Database is empty, loading seed data...")
+                from app.seed_data import main
+                # Note: seed_data uses sync sessions, which is fine for migrations/seeding
+                main()
+                print("Seed data loaded successfully!")
+            else:
+                print(f"Database already contains data ({category_count} categories), skipping seed data.")
+        except Exception as e:
+            print(f"Error loading seed data: {e}")
 
 
 
@@ -62,19 +63,19 @@ app.include_router(achievements.router, prefix=settings.API_V1_PREFIX, tags=["ac
 
 
 @app.get("/")
-def root():
+async def root():
     return {"message": "Learnify API", "version": "1.0.0"}
 
 
 @app.get("/health")
-def health():
+async def health():
     return {"status": "ok"}
 
 
 @app.get("/health/detailed")
-def health_detailed(db: Session = Depends(get_db)):
+async def health_detailed(db: AsyncSession = Depends(get_db)):
     try:
-        db.execute(text("SELECT 1"))
+        await db.execute(text("SELECT 1"))
         return {
             "status": "ok",
             "database": "connected",

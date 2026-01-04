@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
+from sqlalchemy.orm import selectinload
 from typing import List, Optional
 from app.database import get_db
 from app.models import Course, UserCourse, User, Lesson
@@ -11,46 +13,60 @@ router = APIRouter()
 
 
 @router.get("/courses", response_model=List[CourseResponse])
-def get_courses(
+async def get_courses(
     category_id: Optional[str] = Query(None),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Получить список курсов (с опциональной фильтрацией по категории)"""
-    query = db.query(Course)
+    query = select(Course).options(selectinload(Course.category))
 
     if category_id:
         query = query.filter(Course.category_id == category_id)
 
-    courses = query.all()
+    result = await db.execute(query)
+    courses = result.scalars().all()
     return courses
 
 
 @router.get("/courses/{course_id}", response_model=CourseResponse)
-def get_course(course_id: str, db: Session = Depends(get_db)):
+async def get_course(course_id: str, db: AsyncSession = Depends(get_db)):
     """Получить детали курса"""
-    course = db.query(Course).filter(Course.course_id == course_id).first()
+    result = await db.execute(
+        select(Course)
+        .options(selectinload(Course.category))
+        .filter(Course.course_id == course_id)
+    )
+    course = result.scalar_one_or_none()
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
     return course
 
 
 @router.post("/courses/{course_id}/enroll", response_model=CourseEnrollResponse)
-def enroll_course(
+async def enroll_course(
     course_id: str,
-    db: Session = Depends(get_db),
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Записаться на курс"""
 
-    course = db.query(Course).filter(Course.course_id == course_id).first()
+    result = await db.execute(
+        select(Course)
+        .options(selectinload(Course.category))
+        .filter(Course.course_id == course_id)
+        )
+    course = result.scalar_one_or_none()
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
 
 
-    existing = db.query(UserCourse).filter(
-        UserCourse.user_id == current_user.id,
-        UserCourse.course_id == course_id
-    ).first()
+    result = await db.execute(
+        select(UserCourse).filter(
+            UserCourse.user_id == current_user.id,
+            UserCourse.course_id == course_id
+        )
+    )
+    existing = result.scalar_one_or_none()
 
     if existing:
         return CourseEnrollResponse(
@@ -64,7 +80,7 @@ def enroll_course(
         course_id=course_id
     )
     db.add(user_course)
-    db.commit()
+    await db.commit()
 
     return CourseEnrollResponse(
         message="Successfully enrolled",
@@ -73,32 +89,38 @@ def enroll_course(
 
 
 @router.get("/courses/{course_id}/lessons", response_model=List[LessonListItem])
-def get_course_lessons(course_id: str, db: Session = Depends(get_db)):
+async def get_course_lessons(course_id: str, db: AsyncSession = Depends(get_db)):
     """Получить уроки курса"""
 
 
-    course = db.query(Course).filter(Course.course_id == course_id).first()
+    result = await db.execute(select(Course).filter(Course.course_id == course_id))
+    course = result.scalar_one_or_none()
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
 
-    lessons = db.query(Lesson).filter(Lesson.course_id == course_id).order_by(Lesson.order).all()
+    result = await db.execute(
+        select(Lesson).filter(Lesson.course_id == course_id).order_by(Lesson.order)
+    )
+    lessons = result.scalars().all()
     return lessons
 
 
 @router.get("/user/courses", response_model=List[CourseResponse])
-def get_enrolled_courses(
-    db: Session = Depends(get_db),
+async def get_enrolled_courses(
+    db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
     """Получить список курсов, на которые записан текущий пользователь"""
-    user_courses = db.query(UserCourse).filter(
-        UserCourse.user_id == current_user.id
-    ).all()
+    result = await db.execute(
+        select(UserCourse).filter(UserCourse.user_id == current_user.id)
+    )
+    user_courses = result.scalars().all()
 
     course_ids = [uc.course_id for uc in user_courses]
     if not course_ids:
         return []
 
-    courses = db.query(Course).filter(Course.course_id.in_(course_ids)).all()
+    result = await db.execute(select(Course).filter(Course.course_id.in_(course_ids)))
+    courses = result.scalars().all()
     return courses
 

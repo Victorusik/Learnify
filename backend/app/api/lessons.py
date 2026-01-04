@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from app.database import get_db
 from app.models import Lesson, Block
 from app.schemas.lesson import LessonResponse
@@ -9,13 +10,17 @@ router = APIRouter()
 
 
 @router.get("/lessons/{lesson_id}", response_model=LessonResponse)
-def get_lesson(lesson_id: str, db: Session = Depends(get_db)):
+async def get_lesson(lesson_id: str, db: AsyncSession = Depends(get_db)):
     """Получить детали урока с блоками"""
-    lesson = db.query(Lesson).filter(Lesson.id == lesson_id).first()
+    result = await db.execute(select(Lesson).filter(Lesson.id == lesson_id))
+    lesson = result.scalar_one_or_none()
     if not lesson:
         raise HTTPException(status_code=404, detail="Lesson not found")
 
-    blocks = db.query(Block).filter(Block.lesson_id == lesson_id).order_by(Block.order).all()
+    result = await db.execute(
+        select(Block).filter(Block.lesson_id == lesson_id).order_by(Block.order)
+    )
+    blocks = result.scalars().all()
 
 
 

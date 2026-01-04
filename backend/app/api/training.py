@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 from app.database import get_db
 from app.schemas.training import TrainingCardResponse, TrainingSubmitRequest, TrainingSubmitResponse
 from app.schemas.block import BlockResponse, TheoryBlockResponse, PracticeBlockResponse
@@ -12,9 +12,9 @@ DEFAULT_USER_ID = 1
 
 
 @router.get("/training/cards", response_model=TrainingCardResponse)
-def get_training_cards(db: Session = Depends(get_db)):
+async def get_training_cards(db: AsyncSession = Depends(get_db)):
     """Получить карточки для тренировки"""
-    cards = get_cards_for_training(db, DEFAULT_USER_ID, limit=10)
+    cards = await get_cards_for_training(db, DEFAULT_USER_ID, limit=10)
     
     block_responses = []
     for block in cards:
@@ -48,12 +48,12 @@ def get_training_cards(db: Session = Depends(get_db)):
 
 
 @router.post("/training/submit", response_model=TrainingSubmitResponse)
-def submit_training_answer(
+async def submit_training_answer(
     request: TrainingSubmitRequest,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Отправить ответ на карточку"""
-    repetition_data = submit_answer(
+    repetition_data = await submit_answer(
         db,
         DEFAULT_USER_ID,
         request.block_id,
@@ -63,7 +63,7 @@ def submit_training_answer(
     )
     
     
-    check_and_unlock_achievements(db, DEFAULT_USER_ID)
+    await check_and_unlock_achievements(db, DEFAULT_USER_ID)
 
     
     return TrainingSubmitResponse(

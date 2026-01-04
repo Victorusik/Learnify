@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from typing import List
 from app.database import get_db
 from app.models import Category
@@ -9,8 +10,9 @@ router = APIRouter()
 
 
 @router.get("/categories", response_model=List[CategoryResponse])
-def get_categories(db: Session = Depends(get_db)):
+async def get_categories(db: AsyncSession = Depends(get_db)):
     """Получить список всех категорий"""
-    categories = db.query(Category).all()
+    result = await db.execute(select(Category))
+    categories = result.scalars().all()
     return categories
 

@@ -1,7 +1,8 @@
 from datetime import datetime, timedelta, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from app.database import get_db
 from app.models import User, RefreshToken
 from app.schemas.auth import UserRegister, UserLogin, TokenResponse, TokenRefresh, UserProfile, UserUpdate
@@ -15,9 +16,9 @@ router = APIRouter()
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_PREFIX}/auth/login", auto_error=False)
 
 
-def get_current_user(
+async def get_current_user(
     token: str = Depends(oauth2_scheme),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ) -> User:
     """Dependency to get the current authenticated user from JWT token"""
     credentials_exception = HTTPException(
@@ -39,7 +40,8 @@ def get_current_user(
         raise credentials_exception
     
 
-    user = db.query(User).filter(User.id == user_id).first()
+    result = await db.execute(select(User).filter(User.id == user_id))
+    user = result.scalar_one_or_none()
     if user is None:
         raise credentials_exception
     
@@ -53,7 +55,7 @@ def get_current_user(
 
 
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
-def register(user_data: UserRegister, db: Session = Depends(get_db)):
+async def register(user_data: UserRegister, db: AsyncSession = Depends(get_db)):
     """
     Register a new user.
     
@@ -64,7 +66,8 @@ def register(user_data: UserRegister, db: Session = Depends(get_db)):
     Returns access and refresh tokens upon successful registration.
     """
 
-    existing_user = db.query(User).filter(User.email == user_data.email).first()
+    result = await db.execute(select(User).filter(User.email == user_data.email))
+    existing_user = result.scalar_one_or_none()
     if existing_user:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -81,8 +84,8 @@ def register(user_data: UserRegister, db: Session = Depends(get_db)):
     )
     
     db.add(new_user)
-    db.commit()
-    db.refresh(new_user)
+    await db.commit()
+    await db.refresh(new_user)
     
 
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -102,7 +105,7 @@ def register(user_data: UserRegister, db: Session = Depends(get_db)):
         is_revoked=False
     )
     db.add(db_refresh_token)
-    db.commit()
+    await db.commit()
     
     return TokenResponse(
         access_token=access_token,
@@ -112,7 +115,7 @@ def register(user_data: UserRegister, db: Session = Depends(get_db)):
 
 
 @router.post("/login", response_model=TokenResponse)
-def login(credentials: UserLogin, db: Session = Depends(get_db)):
+async def login(credentials: UserLogin, db: AsyncSession = Depends(get_db)):
     """
     Login with email and password.
     
@@ -122,7 +125,8 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)):
     Returns access and refresh tokens upon successful authentication.
     """
 
-    user = db.query(User).filter(User.email == credentials.email).first()
+    result = await db.execute(select(User).filter(User.email == credentials.email))
+    user = result.scalar_one_or_none()
     
     if not user:
         raise HTTPException(
@@ -164,7 +168,7 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)):
         is_revoked=False
     )
     db.add(db_refresh_token)
-    db.commit()
+    await db.commit()
     
     return TokenResponse(
         access_token=access_token,
@@ -174,7 +178,7 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)):
 
 
 @router.post("/refresh", response_model=TokenResponse)
-def refresh_token(token_data: TokenRefresh, db: Session = Depends(get_db)):
+async def refresh_token(token_data: TokenRefresh, db: AsyncSession = Depends(get_db)):
     """
     Refresh access token using a valid refresh token.
     
@@ -200,11 +204,14 @@ def refresh_token(token_data: TokenRefresh, db: Session = Depends(get_db)):
         )
     
 
-    db_refresh_token = db.query(RefreshToken).filter(
-        RefreshToken.token == token_data.refresh_token,
-        RefreshToken.user_id == user_id,
-        RefreshToken.is_revoked == False
-    ).first()
+    result = await db.execute(
+        select(RefreshToken).filter(
+            RefreshToken.token == token_data.refresh_token,
+            RefreshToken.user_id == user_id,
+            RefreshToken.is_revoked == False
+        )
+    )
+    db_refresh_token = result.scalar_one_or_none()
     
     if not db_refresh_token:
         raise HTTPException(
@@ -217,7 +224,7 @@ def refresh_token(token_data: TokenRefresh, db: Session = Depends(get_db)):
     if datetime.now(timezone.utc) > db_refresh_token.expires_at:
 
         db_refresh_token.is_revoked = True
-        db.commit()
+        await db.commit()
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Refresh token has expired",
@@ -225,7 +232,8 @@ def refresh_token(token_data: TokenRefresh, db: Session = Depends(get_db)):
         )
     
 
-    user = db.query(User).filter(User.id == user_id).first()
+    result = await db.execute(select(User).filter(User.id == user_id))
+    user = result.scalar_one_or_none()
     if not user or not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
@@ -254,7 +262,7 @@ def refresh_token(token_data: TokenRefresh, db: Session = Depends(get_db)):
         is_revoked=False
     )
     db.add(new_db_refresh_token)
-    db.commit()
+    await db.commit()
     
     return TokenResponse(
         access_token=access_token,
@@ -264,7 +272,7 @@ def refresh_token(token_data: TokenRefresh, db: Session = Depends(get_db)):
 
 
 @router.get("/profile", response_model=UserProfile)
-def get_profile(current_user: User = Depends(get_current_user)):
+async def get_profile(current_user: User = Depends(get_current_user)):
     """
     Get current user's profile.
     
@@ -286,10 +294,10 @@ def get_profile(current_user: User = Depends(get_current_user)):
 
 
 @router.put("/profile", response_model=UserProfile)
-def update_profile(
+async def update_profile(
     user_update: UserUpdate,
     current_user: User = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """
     Update current user's profile.
@@ -303,8 +311,8 @@ def update_profile(
     if user_update.selected_categories is not None:
         current_user.selected_categories = user_update.selected_categories
     
-    db.commit()
-    db.refresh(current_user)
+    await db.commit()
+    await db.refresh(current_user)
     
     return UserProfile(
         id=current_user.id,

@@ -5,7 +5,7 @@ import secrets
 
 class Settings(BaseSettings):
 
-    DATABASE_URL: str = "postgresql://learnify:learnify@postgres:5432/learnify"
+    DATABASE_URL: str = "postgresql+asyncpg://learnify:learnify@postgres:5432/learnify"
     DB_POOL_SIZE: int = 5
     DB_MAX_OVERFLOW: int = 10
     DB_POOL_RECYCLE: int = 3600

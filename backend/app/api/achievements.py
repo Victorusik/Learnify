@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from typing import List
 from app.database import get_db
 from app.models import Achievement, UserAchievement
@@ -12,18 +13,22 @@ DEFAULT_USER_ID = 1
 
 
 @router.get("/achievements", response_model=List[AchievementResponse])
-def get_achievements(db: Session = Depends(get_db)):
+async def get_achievements(db: AsyncSession = Depends(get_db)):
     """Получить список всех достижений с информацией о разблокировке"""
-    achievements = db.query(Achievement).all()
+    result = await db.execute(select(Achievement))
+    achievements = result.scalars().all()
     
-    result = []
+    result_list = []
     for achievement in achievements:
-        user_achievement = db.query(UserAchievement).filter(
-            UserAchievement.user_id == DEFAULT_USER_ID,
-            UserAchievement.achievement_id == achievement.id
-        ).first()
+        result = await db.execute(
+            select(UserAchievement).filter(
+                UserAchievement.user_id == DEFAULT_USER_ID,
+                UserAchievement.achievement_id == achievement.id
+            )
+        )
+        user_achievement = result.scalar_one_or_none()
         
-        result.append(AchievementResponse(
+        result_list.append(AchievementResponse(
             id=achievement.id,
             title=achievement.title,
             description=achievement.description,
@@ -34,20 +39,24 @@ def get_achievements(db: Session = Depends(get_db)):
             max_progress=achievement.max_progress
         ))
     
-    return result
+    return result_list
 
 
 @router.post("/achievements/{achievement_id}/unlock", response_model=AchievementUnlockResponse)
-def unlock_achievement(achievement_id: str, db: Session = Depends(get_db)):
+async def unlock_achievement(achievement_id: str, db: AsyncSession = Depends(get_db)):
     """Разблокировать достижение (обычно вызывается автоматически)"""
-    achievement = db.query(Achievement).filter(Achievement.id == achievement_id).first()
+    result = await db.execute(select(Achievement).filter(Achievement.id == achievement_id))
+    achievement = result.scalar_one_or_none()
     if not achievement:
         raise HTTPException(status_code=404, detail="Achievement not found")
     
-    user_achievement = db.query(UserAchievement).filter(
-        UserAchievement.user_id == DEFAULT_USER_ID,
-        UserAchievement.achievement_id == achievement_id
-    ).first()
+    result = await db.execute(
+        select(UserAchievement).filter(
+            UserAchievement.user_id == DEFAULT_USER_ID,
+            UserAchievement.achievement_id == achievement_id
+        )
+    )
+    user_achievement = result.scalar_one_or_none()
     
     if not user_achievement:
         user_achievement = UserAchievement(
@@ -60,8 +69,8 @@ def unlock_achievement(achievement_id: str, db: Session = Depends(get_db)):
         raise HTTPException(status_code=400, detail="Achievement already unlocked")
     
     user_achievement.unlocked_at = datetime.utcnow()
-    db.commit()
-    db.refresh(user_achievement)
+    await db.commit()
+    await db.refresh(user_achievement)
     
     return AchievementUnlockResponse(
         message="Achievement unlocked",

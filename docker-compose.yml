@@ -22,7 +22,7 @@ services:
     ports:
       - "3001:3000"
     environment:
-      DATABASE_URL: postgresql://learnify:learnify@postgres:5432/learnify
+      DATABASE_URL: postgresql+asyncpg://learnify:learnify@postgres:5432/learnify
     depends_on:
       postgres:
         condition: service_healthy

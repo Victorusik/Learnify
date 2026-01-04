@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from datetime import datetime
 from app.database import get_db
 from app.models import UserProgress, User, Lesson, Block
@@ -12,11 +13,12 @@ DEFAULT_USER_ID = 1
 
 
 @router.get("/progress")
-def get_progress(db: Session = Depends(get_db)):
+async def get_progress(db: AsyncSession = Depends(get_db)):
     """Получить прогресс пользователя по всем курсам"""
-    progress_items = db.query(UserProgress).filter(
-        UserProgress.user_id == DEFAULT_USER_ID
-    ).all()
+    result = await db.execute(
+        select(UserProgress).filter(UserProgress.user_id == DEFAULT_USER_ID)
+    )
+    progress_items = result.scalars().all()
 
     return {
         "total_blocks_completed": len(progress_items),
@@ -33,16 +35,19 @@ def get_progress(db: Session = Depends(get_db)):
 
 
 @router.post("/progress/block", response_model=ProgressResponse)
-def mark_block_completed(
+async def mark_block_completed(
     progress_data: BlockProgressCreate,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Отметить блок как выполненный"""
 
-    existing = db.query(UserProgress).filter(
-        UserProgress.user_id == DEFAULT_USER_ID,
-        UserProgress.block_id == progress_data.block_id
-    ).first()
+    result = await db.execute(
+        select(UserProgress).filter(
+            UserProgress.user_id == DEFAULT_USER_ID,
+            UserProgress.block_id == progress_data.block_id
+        )
+    )
+    existing = result.scalar_one_or_none()
 
     if existing:
         return ProgressResponse(
@@ -59,10 +64,10 @@ def mark_block_completed(
         completed_at=datetime.utcnow()
     )
     db.add(user_progress)
-    db.commit()
+    await db.commit()
 
 
-    check_and_unlock_achievements(db, DEFAULT_USER_ID)
+    await check_and_unlock_achievements(db, DEFAULT_USER_ID)
 
     return ProgressResponse(
         message="Block marked as completed",
@@ -71,21 +76,27 @@ def mark_block_completed(
 
 
 @router.post("/progress/lesson", response_model=ProgressResponse)
-def mark_lesson_completed(
+async def mark_lesson_completed(
     progress_data: LessonProgressCreate,
-    db: Session = Depends(get_db)
+    db: AsyncSession = Depends(get_db)
 ):
     """Отметить урок как завершенный"""
 
 
-    blocks = db.query(Block).filter(Block.lesson_id == progress_data.lesson_id).all()
+    result = await db.execute(
+        select(Block).filter(Block.lesson_id == progress_data.lesson_id)
+    )
+    blocks = result.scalars().all()
 
 
     for block in blocks:
-        existing = db.query(UserProgress).filter(
-            UserProgress.user_id == DEFAULT_USER_ID,
-            UserProgress.block_id == block.id
-        ).first()
+        result = await db.execute(
+            select(UserProgress).filter(
+                UserProgress.user_id == DEFAULT_USER_ID,
+                UserProgress.block_id == block.id
+            )
+        )
+        existing = result.scalar_one_or_none()
 
         if not existing:
             user_progress = UserProgress(
@@ -97,10 +108,10 @@ def mark_lesson_completed(
             )
             db.add(user_progress)
 
-    db.commit()
+    await db.commit()
 
 
-    check_and_unlock_achievements(db, DEFAULT_USER_ID)
+    await check_and_unlock_achievements(db, DEFAULT_USER_ID)
 
     return ProgressResponse(
         message="Lesson marked as completed",

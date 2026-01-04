@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select
 from app.database import get_db
 from app.models import User, UserStatistics
 from app.schemas.user import UserResponse, UserUpdate, UserStatisticsResponse
@@ -11,9 +12,10 @@ DEFAULT_USER_ID = 1
 
 
 @router.get("/user", response_model=UserResponse)
-def get_user(db: Session = Depends(get_db)):
+async def get_user(db: AsyncSession = Depends(get_db)):
     """Получить данные текущего пользователя"""
-    user = db.query(User).filter(User.id == DEFAULT_USER_ID).first()
+    result = await db.execute(select(User).filter(User.id == DEFAULT_USER_ID))
+    user = result.scalar_one_or_none()
     if not user:
 
         user = User(
@@ -28,15 +30,16 @@ def get_user(db: Session = Depends(get_db)):
             notifications=[{"time": "09:00"}, {"time": "19:00"}]
         )
         db.add(user)
-        db.commit()
-        db.refresh(user)
+        await db.commit()
+        await db.refresh(user)
     return user
 
 
 @router.put("/user", response_model=UserResponse)
-def update_user(user_update: UserUpdate, db: Session = Depends(get_db)):
+async def update_user(user_update: UserUpdate, db: AsyncSession = Depends(get_db)):
     """Обновить данные пользователя"""
-    user = db.query(User).filter(User.id == DEFAULT_USER_ID).first()
+    result = await db.execute(select(User).filter(User.id == DEFAULT_USER_ID))
+    user = result.scalar_one_or_none()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
     
@@ -44,15 +47,18 @@ def update_user(user_update: UserUpdate, db: Session = Depends(get_db)):
     for field, value in update_data.items():
         setattr(user, field, value)
     
-    db.commit()
-    db.refresh(user)
+    await db.commit()
+    await db.refresh(user)
     return user
 
 
 @router.get("/user/statistics", response_model=UserStatisticsResponse)
-def get_user_statistics(db: Session = Depends(get_db)):
+async def get_user_statistics(db: AsyncSession = Depends(get_db)):
     """Получить статистику пользователя"""
-    stats = db.query(UserStatistics).filter(UserStatistics.user_id == DEFAULT_USER_ID).first()
+    result = await db.execute(
+        select(UserStatistics).filter(UserStatistics.user_id == DEFAULT_USER_ID)
+    )
+    stats = result.scalar_one_or_none()
     
     if not stats:
 
@@ -64,8 +70,8 @@ def get_user_statistics(db: Session = Depends(get_db)):
             total_cards_reviewed=1245
         )
         db.add(stats)
-        db.commit()
-        db.refresh(stats)
+        await db.commit()
+        await db.refresh(stats)
     
     return stats
 

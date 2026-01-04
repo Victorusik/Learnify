@@ -1,27 +1,33 @@
 from datetime import datetime
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy import select, func, distinct
 from app.models import UserAchievement, Achievement, UserProgress, RepetitionData, User
 from typing import List
 
 
-def check_and_unlock_achievements(db: Session, user_id: int) -> List[UserAchievement]:
+async def check_and_unlock_achievements(db: AsyncSession, user_id: int) -> List[UserAchievement]:
     """
     Проверяет условия достижений и разблокирует их при необходимости
     """
     unlocked = []
-    user = db.query(User).filter(User.id == user_id).first()
+    result = await db.execute(select(User).filter(User.id == user_id))
+    user = result.scalar_one_or_none()
     if not user:
         return unlocked
     
 
-    achievements = db.query(Achievement).all()
+    result = await db.execute(select(Achievement))
+    achievements = result.scalars().all()
     
     for achievement in achievements:
 
-        existing = db.query(UserAchievement).filter(
-            UserAchievement.user_id == user_id,
-            UserAchievement.achievement_id == achievement.id
-        ).first()
+        result = await db.execute(
+            select(UserAchievement).filter(
+                UserAchievement.user_id == user_id,
+                UserAchievement.achievement_id == achievement.id
+            )
+        )
+        existing = result.scalar_one_or_none()
         
         if existing and existing.unlocked_at:
             continue
@@ -32,9 +38,12 @@ def check_and_unlock_achievements(db: Session, user_id: int) -> List[UserAchieve
         
         if achievement.id == "first_step":
 
-            progress_count = db.query(UserProgress).filter(
-                UserProgress.user_id == user_id
-            ).count()
+            result = await db.execute(
+                select(func.count()).select_from(UserProgress).filter(
+                    UserProgress.user_id == user_id
+                )
+            )
+            progress_count = result.scalar_one()
             if progress_count > 0:
                 should_unlock = True
                 progress = 1
@@ -47,23 +56,32 @@ def check_and_unlock_achievements(db: Session, user_id: int) -> List[UserAchieve
         
         elif achievement.id == "hundred_cards":
 
-            cards_reviewed = db.query(RepetitionData).filter(
-                RepetitionData.user_id == user_id
-            ).count()
+            result = await db.execute(
+                select(func.count()).select_from(RepetitionData).filter(
+                    RepetitionData.user_id == user_id
+                )
+            )
+            cards_reviewed = result.scalar_one()
             progress = cards_reviewed
             if cards_reviewed >= 100:
                 should_unlock = True
         
         elif achievement.id == "excellent":
 
-            total_reviews = db.query(RepetitionData).filter(
-                RepetitionData.user_id == user_id
-            ).count()
+            result = await db.execute(
+                select(func.count()).select_from(RepetitionData).filter(
+                    RepetitionData.user_id == user_id
+                )
+            )
+            total_reviews = result.scalar_one()
             if total_reviews > 0:
-                correct_reviews = db.query(RepetitionData).filter(
-                    RepetitionData.user_id == user_id,
-                    RepetitionData.mistakes == 0
-                ).count()
+                result = await db.execute(
+                    select(func.count()).select_from(RepetitionData).filter(
+                        RepetitionData.user_id == user_id,
+                        RepetitionData.mistakes == 0
+                    )
+                )
+                correct_reviews = result.scalar_one()
                 accuracy = (correct_reviews / total_reviews) * 100
                 progress = int(accuracy)
                 if accuracy >= 90:
@@ -71,9 +89,12 @@ def check_and_unlock_achievements(db: Session, user_id: int) -> List[UserAchieve
         
         elif achievement.id == "fast_start":
 
-            lessons_completed = db.query(UserProgress).filter(
-                UserProgress.user_id == user_id
-            ).distinct(UserProgress.lesson_id).count()
+            result = await db.execute(
+                select(func.count(distinct(UserProgress.lesson_id))).filter(
+                    UserProgress.user_id == user_id
+                )
+            )
+            lessons_completed = result.scalar_one()
             progress = lessons_completed
             if lessons_completed >= 5:
                 should_unlock = True
@@ -86,25 +107,37 @@ def check_and_unlock_achievements(db: Session, user_id: int) -> List[UserAchieve
         
         elif achievement.id == "all_courses":
 
-            courses_count = db.query(UserProgress).filter(
-                UserProgress.user_id == user_id
-            ).distinct(UserProgress.course_id).count()
+            result = await db.execute(
+                select(func.count(distinct(UserProgress.course_id))).filter(
+                    UserProgress.user_id == user_id
+                )
+            )
+            courses_count = result.scalar_one()
             progress = courses_count
 
-            total_courses = db.query(UserProgress).distinct(UserProgress.course_id).count()
+            result = await db.execute(
+                select(func.count(distinct(UserProgress.course_id)))
+            )
+            total_courses = result.scalar_one()
             if courses_count >= total_courses and total_courses > 0:
                 should_unlock = True
         
         elif achievement.id == "perfect":
 
-            total_reviews = db.query(RepetitionData).filter(
-                RepetitionData.user_id == user_id
-            ).count()
+            result = await db.execute(
+                select(func.count()).select_from(RepetitionData).filter(
+                    RepetitionData.user_id == user_id
+                )
+            )
+            total_reviews = result.scalar_one()
             if total_reviews > 0:
-                correct_reviews = db.query(RepetitionData).filter(
-                    RepetitionData.user_id == user_id,
-                    RepetitionData.mistakes == 0
-                ).count()
+                result = await db.execute(
+                    select(func.count()).select_from(RepetitionData).filter(
+                        RepetitionData.user_id == user_id,
+                        RepetitionData.mistakes == 0
+                    )
+                )
+                correct_reviews = result.scalar_one()
                 accuracy = (correct_reviews / total_reviews) * 100
                 progress = int(accuracy)
                 if accuracy >= 100:
@@ -126,6 +159,6 @@ def check_and_unlock_achievements(db: Session, user_id: int) -> List[UserAchieve
         else:
             existing.progress = progress
     
-    db.commit()
+    await db.commit()
     return unlocked
 
