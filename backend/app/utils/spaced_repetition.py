@@ -16,7 +16,7 @@ def calculate_next_review(
     now = datetime.utcnow()
     
     if not last_review:
-        # Первое повторение
+
         new_interval = 1
         new_ease_factor = 2.5
     else:
@@ -24,15 +24,15 @@ def calculate_next_review(
         new_ease_factor = ease_factor or 2.5
         
         if is_correct:
-            # Увеличиваем интервал
+
             new_interval = int(new_interval * new_ease_factor)
             new_ease_factor = min(new_ease_factor + 0.1, 2.5)
         else:
-            # Уменьшаем интервал при ошибке
+
             new_interval = max(1, int(new_interval / 2))
             new_ease_factor = max(1.3, new_ease_factor - 0.2)
     
-    # Ограничиваем интервалы: 1, 7, 16, 35 дней
+
     intervals = [1, 7, 16, 35]
     closest_interval = min(intervals, key=lambda x: abs(x - new_interval))
     new_interval = closest_interval

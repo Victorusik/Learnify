@@ -35,15 +35,13 @@ def retry_db_operation(
                     await asyncio.sleep(delay)
                     delay = min(delay * backoff_factor, max_delay)
             
-            # Should not be reached
+
             raise last_exception
 
         @wraps(func)
         def sync_wrapper(*args, **kwargs):
-             # Basic sync implementation if needed, though FastAPI is mostly async
-             # For blocking DB calls (common with SQLAlchemy ORM without asyncio ext)
-             # We might need time.sleep instead of asyncio.sleep
             import time
+
             delay = initial_delay
             last_exception = None
             

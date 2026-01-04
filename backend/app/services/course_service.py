@@ -1,13 +1,13 @@
 from sqlalchemy.orm import Session
 from typing import Optional, List
-from app.models import Course, Lesson, Block, UserCourse
+from app.models import Course, Lesson, Block, UserCourse, UserProgress
 
 
 def get_course_progress(db: Session, user_id: int, course_id: str) -> float:
     """
     Рассчитывает прогресс пользователя по курсу в процентах
     """
-    # Получаем все уроки курса
+
     lessons = db.query(Lesson).filter(Lesson.course_id == course_id).all()
 
     if not lessons:
@@ -21,7 +21,7 @@ def get_course_progress(db: Session, user_id: int, course_id: str) -> float:
         total_blocks += len(blocks)
 
         for block in blocks:
-            from app.models import UserProgress
+
             progress = db.query(UserProgress).filter(
                 UserProgress.user_id == user_id,
                 UserProgress.block_id == block.id
@@ -33,6 +33,6 @@ def get_course_progress(db: Session, user_id: int, course_id: str) -> float:
         return 0.0
 
     progress = (completed_blocks / total_blocks) * 100
-    # Ограничиваем прогресс до 100%
+
     return min(progress, 100.0)
 

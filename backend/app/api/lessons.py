@@ -17,7 +17,8 @@ def get_lesson(lesson_id: str, db: Session = Depends(get_db)):
 
     blocks = db.query(Block).filter(Block.lesson_id == lesson_id).order_by(Block.order).all()
 
-    # Преобразуем блоки в правильный формат
+
+
     block_responses = []
     for block in blocks:
         if block.type == "theory":

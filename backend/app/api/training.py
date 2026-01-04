@@ -62,8 +62,9 @@ def submit_training_answer(
         request.is_correct
     )
     
-    # Проверяем достижения
+    
     check_and_unlock_achievements(db, DEFAULT_USER_ID)
+
     
     return TrainingSubmitResponse(
         message="Answer submitted",

@@ -1,6 +1,7 @@
 from passlib.context import CryptContext
 
-# Create password context with bcrypt
+
+
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 

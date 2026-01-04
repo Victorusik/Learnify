@@ -11,8 +11,7 @@ from app.config import settings
 
 router = APIRouter()
 
-# OAuth2 scheme for token authentication
-# Note: tokenUrl is used for OpenAPI documentation, actual endpoint uses JSON body
+
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_PREFIX}/auth/login", auto_error=False)
 
 
@@ -30,7 +29,7 @@ def get_current_user(
     if not token:
         raise credentials_exception
     
-    # Verify the access token
+
     payload = verify_token(token, token_type="access")
     if payload is None:
         raise credentials_exception
@@ -39,7 +38,7 @@ def get_current_user(
     if user_id is None:
         raise credentials_exception
     
-    # Get user from database
+
     user = db.query(User).filter(User.id == user_id).first()
     if user is None:
         raise credentials_exception
@@ -64,7 +63,7 @@ def register(user_data: UserRegister, db: Session = Depends(get_db)):
     
     Returns access and refresh tokens upon successful registration.
     """
-    # Check if user with this email already exists
+
     existing_user = db.query(User).filter(User.email == user_data.email).first()
     if existing_user:
         raise HTTPException(
@@ -72,7 +71,7 @@ def register(user_data: UserRegister, db: Session = Depends(get_db)):
             detail="Email already registered"
         )
     
-    # Create new user
+
     hashed_password = hash_password(user_data.password)
     new_user = User(
         email=user_data.email,
@@ -85,7 +84,7 @@ def register(user_data: UserRegister, db: Session = Depends(get_db)):
     db.commit()
     db.refresh(new_user)
     
-    # Create tokens
+
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": str(new_user.id), "email": new_user.email},
@@ -94,7 +93,7 @@ def register(user_data: UserRegister, db: Session = Depends(get_db)):
     
     refresh_token = create_refresh_token(data={"sub": str(new_user.id), "email": new_user.email})
     
-    # Store refresh token in database
+
     refresh_token_expires = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
     db_refresh_token = RefreshToken(
         user_id=new_user.id,
@@ -122,7 +121,7 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)):
     
     Returns access and refresh tokens upon successful authentication.
     """
-    # Find user by email
+
     user = db.query(User).filter(User.email == credentials.email).first()
     
     if not user:
@@ -132,7 +131,7 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)):
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    # Verify password
+
     if not verify_password(credentials.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -140,14 +139,14 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)):
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    # Check if user is active
+
     if not user.is_active:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="User account is inactive"
         )
     
-    # Create tokens
+
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": str(user.id), "email": user.email},
@@ -156,7 +155,7 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)):
     
     refresh_token = create_refresh_token(data={"sub": str(user.id), "email": user.email})
     
-    # Store refresh token in database
+
     refresh_token_expires = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
     db_refresh_token = RefreshToken(
         user_id=user.id,
@@ -183,7 +182,7 @@ def refresh_token(token_data: TokenRefresh, db: Session = Depends(get_db)):
     
     Returns a new access token and optionally a new refresh token.
     """
-    # Verify refresh token
+
     payload = verify_token(token_data.refresh_token, token_type="refresh")
     if payload is None:
         raise HTTPException(
@@ -200,7 +199,7 @@ def refresh_token(token_data: TokenRefresh, db: Session = Depends(get_db)):
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    # Check if refresh token exists in database and is not revoked
+
     db_refresh_token = db.query(RefreshToken).filter(
         RefreshToken.token == token_data.refresh_token,
         RefreshToken.user_id == user_id,
@@ -214,9 +213,9 @@ def refresh_token(token_data: TokenRefresh, db: Session = Depends(get_db)):
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    # Check if token is expired
+
     if datetime.now(timezone.utc) > db_refresh_token.expires_at:
-        # Mark token as revoked
+
         db_refresh_token.is_revoked = True
         db.commit()
         raise HTTPException(
@@ -225,7 +224,7 @@ def refresh_token(token_data: TokenRefresh, db: Session = Depends(get_db)):
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    # Get user
+
     user = db.query(User).filter(User.id == user_id).first()
     if not user or not user.is_active:
         raise HTTPException(
@@ -233,20 +232,20 @@ def refresh_token(token_data: TokenRefresh, db: Session = Depends(get_db)):
             detail="User not found or inactive"
         )
     
-    # Create new access token
+
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
         data={"sub": str(user.id), "email": user.email},
         expires_delta=access_token_expires
     )
     
-    # Optionally create a new refresh token (rotate refresh tokens for better security)
+
     new_refresh_token = create_refresh_token(data={"sub": str(user.id), "email": user.email})
     
-    # Revoke old refresh token
+
     db_refresh_token.is_revoked = True
     
-    # Store new refresh token
+
     refresh_token_expires = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
     new_db_refresh_token = RefreshToken(
         user_id=user.id,

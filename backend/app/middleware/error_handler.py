@@ -19,8 +19,6 @@ class GlobalErrorHandler(BaseHTTPMiddleware):
         error_content = {"message": "Internal Server Error", "detail": str(exc)}
         status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 
-
-
         if isinstance(exc, OperationalError):
             logger.error(f"Database Operational Error: {exc}")
             status_code = status.HTTP_503_SERVICE_UNAVAILABLE
@@ -39,8 +37,7 @@ class GlobalErrorHandler(BaseHTTPMiddleware):
             error_content["message"] = "Database Error"
 
         elif isinstance(exc, RequestValidationError):
-            # This is usually handled by FastAPI default internal handler, but catching here just in case
-            # or if we override exception_handlers in main.py
+
             status_code = status.HTTP_422_UNPROCESSABLE_ENTITY
             error_content["message"] = "Validation Error"
             error_content["detail"] = str(exc.errors())
@@ -53,7 +50,7 @@ class GlobalErrorHandler(BaseHTTPMiddleware):
             content=error_content
         )
 
-# Helper function if we want to use exception_handlers instead of middleware for some specific types
+
 async def validation_exception_handler(request: Request, exc: RequestValidationError):
     return JSONResponse(
         status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,

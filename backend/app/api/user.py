@@ -6,7 +6,7 @@ from app.schemas.user import UserResponse, UserUpdate, UserStatisticsResponse
 
 router = APIRouter()
 
-# Временное решение: используем user_id = 1 по умолчанию
+
 DEFAULT_USER_ID = 1
 
 
@@ -15,7 +15,7 @@ def get_user(db: Session = Depends(get_db)):
     """Получить данные текущего пользователя"""
     user = db.query(User).filter(User.id == DEFAULT_USER_ID).first()
     if not user:
-        # Создаем пользователя по умолчанию
+
         user = User(
             id=DEFAULT_USER_ID,
             name="Алексей",
@@ -55,7 +55,7 @@ def get_user_statistics(db: Session = Depends(get_db)):
     stats = db.query(UserStatistics).filter(UserStatistics.user_id == DEFAULT_USER_ID).first()
     
     if not stats:
-        # Создаем статистику по умолчанию
+
         stats = UserStatistics(
             user_id=DEFAULT_USER_ID,
             total_lessons=156,

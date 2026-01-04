@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.database import get_db
-from app.models import Course, UserCourse, User
+from app.models import Course, UserCourse, User, Lesson
 from app.schemas.course import CourseResponse, CourseEnrollResponse
 from app.schemas.lesson import LessonListItem
 from app.api.auth import get_current_user
@@ -41,12 +41,12 @@ def enroll_course(
     current_user: User = Depends(get_current_user)
 ):
     """Записаться на курс"""
-    # Проверяем существование курса
+
     course = db.query(Course).filter(Course.course_id == course_id).first()
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
 
-    # Проверяем, не записан ли уже
+
     existing = db.query(UserCourse).filter(
         UserCourse.user_id == current_user.id,
         UserCourse.course_id == course_id
@@ -58,7 +58,7 @@ def enroll_course(
             course_id=course_id
         )
 
-    # Создаем запись
+
     user_course = UserCourse(
         user_id=current_user.id,
         course_id=course_id
@@ -75,7 +75,7 @@ def enroll_course(
 @router.get("/courses/{course_id}/lessons", response_model=List[LessonListItem])
 def get_course_lessons(course_id: str, db: Session = Depends(get_db)):
     """Получить уроки курса"""
-    from app.models import Lesson
+
 
     course = db.query(Course).filter(Course.course_id == course_id).first()
     if not course:

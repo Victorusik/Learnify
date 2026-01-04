@@ -16,7 +16,7 @@ def get_cards_for_training(db: Session, user_id: int, limit: int = 10) -> List[B
     now = datetime.utcnow()
     cards: List[Block] = []
     
-    # Приоритет 1: needs_review = true
+
     needs_review_data = db.query(RepetitionData).filter(
         and_(
             RepetitionData.user_id == user_id,
@@ -31,7 +31,7 @@ def get_cards_for_training(db: Session, user_id: int, limit: int = 10) -> List[B
     ]
     cards.extend(needs_review_blocks)
     
-    # Приоритет 2: наступило время повторения
+
     due_review_data = db.query(RepetitionData).filter(
         and_(
             RepetitionData.user_id == user_id,
@@ -47,7 +47,7 @@ def get_cards_for_training(db: Session, user_id: int, limit: int = 10) -> List[B
     ]
     cards.extend(due_review_blocks)
     
-    # Приоритет 3: новые карточки (нет в repetition_data)
+
     existing_block_ids = {
         rd.block_id for rd in db.query(RepetitionData).filter(
             RepetitionData.user_id == user_id
@@ -93,7 +93,7 @@ def submit_answer(
         )
         db.add(repetition_data)
     
-    # Рассчитываем следующее повторение
+
     next_review, new_interval, new_ease_factor = calculate_next_review(
         repetition_data.last_review,
         repetition_data.next_review,

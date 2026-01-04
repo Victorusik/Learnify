@@ -10,20 +10,19 @@ from app import models  # Force import of all models
 from app.models import Category
 from sqlalchemy.orm import Session
 from sqlalchemy import text
-from fastapi import Depends, status, Response
+from fastapi import Depends, status
 
 
 app = FastAPI(title="Learnify API", version="1.0.0")
 
 @app.on_event("startup")
 def on_startup():
-    # Create all tables
     Base.metadata.create_all(bind=engine)
 
-    # Load seed data if database is empty
+
     db = SessionLocal()
     try:
-        # Check if categories exist (indicator that seed data was loaded)
+
         category_count = db.query(Category).count()
         if category_count == 0:
             print("Database is empty, loading seed data...")
@@ -34,12 +33,12 @@ def on_startup():
             print(f"Database already contains data ({category_count} categories), skipping seed data.")
     except Exception as e:
         print(f"Error loading seed data: {e}")
-        # Don't fail startup if seed data fails
+
     finally:
         db.close()
 
 
-# CORS
+
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
@@ -48,10 +47,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Global Exception Handler
+
 app.add_middleware(GlobalErrorHandler)
 
-# Include routers
+
 app.include_router(auth.router, prefix=f"{settings.API_V1_PREFIX}/auth", tags=["authentication"])
 app.include_router(categories.router, prefix=settings.API_V1_PREFIX, tags=["categories"])
 app.include_router(courses.router, prefix=settings.API_V1_PREFIX, tags=["courses"])

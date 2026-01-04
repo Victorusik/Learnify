@@ -8,7 +8,7 @@ from app.models import (
 )
 from app.utils.password import hash_password
 
-from datetime import datetime
+
 from sqlalchemy import text
 
 
@@ -57,7 +57,7 @@ def seed_achievements(db: Session):
 
 def seed_course_tm_inter_002(db: Session):
     """Загрузить курс TM-INTER-002"""
-    # Создаем курс
+
     existing_course = db.query(Course).filter(Course.course_id == "TM-INTER-002").first()
     if not existing_course:
         course = Course(
@@ -94,18 +94,18 @@ def seed_course_tm_inter_002(db: Session):
         db.add(course)
         db.flush()
     else:
-        # If course exists, delete all lessons to re-seed strictly from mock data
-        from sqlalchemy import text
+
+
         lessons = db.query(Lesson).filter(Lesson.course_id == "TM-INTER-002").all()
         for l in lessons:
-            # Delete repetition data for blocks in this lesson to avoid FK violation
+
             db.execute(text("DELETE FROM repetition_data WHERE block_id IN (SELECT id FROM blocks WHERE lesson_id = :lesson_id)"), {"lesson_id": l.id})
             db.query(Block).filter(Block.lesson_id == l.id).delete()
             db.delete(l)
         db.flush()
     db.flush()
     
-    # Урок 1
+
     lesson_1 = Lesson(
         id="lesson_1",
         course_id="TM-INTER-002",
@@ -116,7 +116,7 @@ def seed_course_tm_inter_002(db: Session):
     db.add(lesson_1)
     db.flush()
     
-    # Блоки урока 1
+
     blocks_1 = [
         Block(id="block_1_1", lesson_id="lesson_1", type="theory", order=1,
               title="Хронотипы и социальный джетлаг",
@@ -139,7 +139,7 @@ def seed_course_tm_inter_002(db: Session):
     for block in blocks_1:
         db.add(block)
     
-    # Урок 2
+
     lesson_2 = Lesson(
         id="lesson_2",
         course_id="TM-INTER-002",
@@ -160,7 +160,7 @@ def seed_course_tm_inter_002(db: Session):
     for block in blocks_2:
         db.add(block)
     
-    # Урок 3
+
     lesson_3 = Lesson(
         id="lesson_3",
         course_id="TM-INTER-002",
@@ -214,7 +214,7 @@ def seed_course_tm_inter_002(db: Session):
     for block in blocks_3:
         db.add(block)
 
-    # Урок 4
+
     lesson_4 = Lesson(
         id="lesson_4",
         course_id="TM-INTER-002",
@@ -268,7 +268,7 @@ def seed_course_tm_inter_002(db: Session):
     for block in blocks_4:
         db.add(block)
 
-    # Урок 5
+
     lesson_5 = Lesson(
         id="lesson_5",
         course_id="TM-INTER-002",
@@ -409,7 +409,7 @@ def seed_default_user(db: Session):
         db.commit()
 
         
-        # Reset the ID sequence to avoid duplicate key errors on next insert
+
         db.execute(text("SELECT setval(pg_get_serial_sequence('users', 'id'), coalesce(max(id), 0) + 1, false) FROM users;"))
         db.commit()
         print("Default user seeded")
