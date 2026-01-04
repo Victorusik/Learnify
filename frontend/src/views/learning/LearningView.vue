@@ -148,7 +148,7 @@ import ProgressBar from '@/components/ui/ProgressBar.vue'
 
 const router = useRouter()
 const coursesStore = useCoursesStore()
-const { initializeCourses } = useCourses()
+const { initializeCourses, loadEnrolledCourses } = useCourses()
 const isInitializing = ref(false)
 
 onMounted(async () => {
@@ -156,15 +156,20 @@ onMounted(async () => {
     try {
       isInitializing.value = true
       await initializeCourses()
+      await loadEnrolledCourses()
 
+      // Если нет записанных курсов, но есть доступные, записываем на первый
       if (coursesStore.enrolledCourses.length === 0 && coursesStore.availableCourses.length > 0) {
-        coursesStore.enrollCourse(coursesStore.availableCourses[0].course_id)
+        // Не записываем автоматически - пользователь должен сам выбрать курс
       }
     } catch (error) {
       console.error('Failed to initialize courses:', error)
     } finally {
       isInitializing.value = false
     }
+  } else {
+    // Если курсы уже загружены, просто загружаем записанные курсы
+    await loadEnrolledCourses()
   }
 })
 

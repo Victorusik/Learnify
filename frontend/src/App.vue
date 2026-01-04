@@ -23,10 +23,12 @@ import { loadUserProgress } from './services/progressLoader'
 import { useCoursesStore } from './stores/coursesStore'
 import { useUserStore } from './stores/userStore'
 import { getAccessToken } from './services/authService'
+import { useCourses } from './composables/useCourses'
 
 const coursesStore = useCoursesStore()
 const userStore = useUserStore()
 const route = useRoute()
+const { initializeCourses, loadEnrolledCourses } = useCourses()
 const isLoading = ref(true)
 const loadError = ref<string | null>(null)
 
@@ -81,7 +83,19 @@ const initializeApp = async () => {
   }
 
   if (userStore.user) {
+    // Инициализируем курсы, если они еще не загружены
+    if (coursesStore.availableCourses.length === 0) {
+      try {
+        await initializeCourses()
+      } catch (error) {
+        console.error('Failed to initialize courses:', error)
+        // Продолжаем работу даже если курсы не загрузились
+      }
+    }
+
     await loadProgress()
+    // Загружаем записанные курсы после загрузки прогресса
+    await loadEnrolledCourses()
   } else {
     isLoading.value = false
   }

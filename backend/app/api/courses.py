@@ -5,12 +5,9 @@ from app.database import get_db
 from app.models import Course, UserCourse, User
 from app.schemas.course import CourseResponse, CourseEnrollResponse
 from app.schemas.lesson import LessonListItem
+from app.api.auth import get_current_user
 
 router = APIRouter()
-
-# Временное решение: используем user_id = 1 по умолчанию
-# В реальном приложении это должно быть из JWT токена
-DEFAULT_USER_ID = 1
 
 
 @router.get("/courses", response_model=List[CourseResponse])
@@ -20,10 +17,10 @@ def get_courses(
 ):
     """Получить список курсов (с опциональной фильтрацией по категории)"""
     query = db.query(Course)
-    
+
     if category_id:
         query = query.filter(Course.category_id == category_id)
-    
+
     courses = query.all()
     return courses
 
@@ -38,33 +35,37 @@ def get_course(course_id: str, db: Session = Depends(get_db)):
 
 
 @router.post("/courses/{course_id}/enroll", response_model=CourseEnrollResponse)
-def enroll_course(course_id: str, db: Session = Depends(get_db)):
+def enroll_course(
+    course_id: str,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
     """Записаться на курс"""
     # Проверяем существование курса
     course = db.query(Course).filter(Course.course_id == course_id).first()
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
-    
+
     # Проверяем, не записан ли уже
     existing = db.query(UserCourse).filter(
-        UserCourse.user_id == DEFAULT_USER_ID,
+        UserCourse.user_id == current_user.id,
         UserCourse.course_id == course_id
     ).first()
-    
+
     if existing:
         return CourseEnrollResponse(
             message="Already enrolled",
             course_id=course_id
         )
-    
+
     # Создаем запись
     user_course = UserCourse(
-        user_id=DEFAULT_USER_ID,
+        user_id=current_user.id,
         course_id=course_id
     )
     db.add(user_course)
     db.commit()
-    
+
     return CourseEnrollResponse(
         message="Successfully enrolled",
         course_id=course_id
@@ -75,11 +76,29 @@ def enroll_course(course_id: str, db: Session = Depends(get_db)):
 def get_course_lessons(course_id: str, db: Session = Depends(get_db)):
     """Получить уроки курса"""
     from app.models import Lesson
-    
+
     course = db.query(Course).filter(Course.course_id == course_id).first()
     if not course:
         raise HTTPException(status_code=404, detail="Course not found")
-    
+
     lessons = db.query(Lesson).filter(Lesson.course_id == course_id).order_by(Lesson.order).all()
     return lessons
+
+
+@router.get("/user/courses", response_model=List[CourseResponse])
+def get_enrolled_courses(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    """Получить список курсов, на которые записан текущий пользователь"""
+    user_courses = db.query(UserCourse).filter(
+        UserCourse.user_id == current_user.id
+    ).all()
+
+    course_ids = [uc.course_id for uc in user_courses]
+    if not course_ids:
+        return []
+
+    courses = db.query(Course).filter(Course.course_id.in_(course_ids)).all()
+    return courses
 

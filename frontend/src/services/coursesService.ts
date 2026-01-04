@@ -96,3 +96,12 @@ export const getCourseLessons = async (courseId: string): Promise<LessonListItem
   }
 }
 
+export const getEnrolledCourses = async (): Promise<CourseResponse[]> => {
+  try {
+    const response = await resilientGet<CourseResponse[]>('/user/courses')
+    return response.data
+  } catch (error) {
+    throw handleApiError(error)
+  }
+}
+

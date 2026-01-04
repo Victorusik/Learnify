@@ -1,5 +1,5 @@
 import { useCoursesStore } from '@/stores/coursesStore'
-import { getCourses, getCourseLessons, enrollCourse as apiEnrollCourse } from '@/services/coursesService'
+import { getCourses, getCourseLessons, enrollCourse as apiEnrollCourse, getEnrolledCourses } from '@/services/coursesService'
 
 export function useCourses() {
   const store = useCoursesStore()
@@ -34,10 +34,66 @@ export function useCourses() {
     }
   }
 
+  const loadEnrolledCourses = async () => {
+    // Проверяем авторизацию перед загрузкой
+    const token = localStorage.getItem('access_token')
+    if (!token) {
+      console.log('Пользователь не авторизован, пропускаем загрузку записанных курсов')
+      return
+    }
+
+    try {
+      const enrolledCoursesResponse = await getEnrolledCourses()
+      const enrolledCourseIds = enrolledCoursesResponse.map(course => course.course_id)
+      store.enrolledCourses = enrolledCourseIds
+
+      // Устанавливаем активный курс, если есть записанные курсы
+      if (enrolledCourseIds.length > 0) {
+        // Если активный курс не установлен, или текущий активный курс не в списке записанных
+        if (!store.activeCourse || !enrolledCourseIds.includes(store.activeCourse.course_id)) {
+          // Сначала пытаемся найти курс в уже загруженных курсах
+          const firstEnrolledCourse = enrolledCoursesResponse[0]
+          let course = store.availableCourses.find(c => c.course_id === firstEnrolledCourse.course_id)
+
+          // Если курс не найден в загруженных, используем данные из ответа API
+          if (!course && firstEnrolledCourse) {
+            // Преобразуем данные из API в формат Course
+            course = {
+              ...firstEnrolledCourse,
+              category: firstEnrolledCourse.category?.name || 'Без категории'
+            } as any
+            // Добавляем курс в список доступных, если его там нет
+            const existingIndex = store.availableCourses.findIndex(c => c.course_id === firstEnrolledCourse.course_id)
+            if (existingIndex === -1) {
+              store.availableCourses.push(course)
+            }
+          }
+
+          if (course) {
+            store.activeCourse = course
+          }
+        }
+      }
+
+      console.log('✅ Загружены записанные курсы:', enrolledCourseIds)
+    } catch (error: any) {
+      // Если ошибка 401, пользователь не авторизован - это нормально
+      if (error?.status === 401) {
+        console.log('Пользователь не авторизован для загрузки записанных курсов')
+        return
+      }
+      console.error('Failed to load enrolled courses:', error)
+      // Не бросаем ошибку, так как это не критично для работы приложения
+    }
+  }
+
   const enrollCourse = async (courseId: string) => {
     try {
       await apiEnrollCourse(courseId)
       store.enrollCourse(courseId)
+      // Обновляем список записанных курсов с сервера
+      await loadEnrolledCourses()
+      console.log('✅ Успешно записались на курс:', courseId)
     } catch (error) {
       console.error('Failed to enroll in course:', error)
       throw error
@@ -54,6 +110,7 @@ export function useCourses() {
 
   return {
     initializeCourses,
+    loadEnrolledCourses,
     enrollCourse,
     getCurrentLesson,
     getLessonProgress

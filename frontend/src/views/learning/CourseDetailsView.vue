@@ -61,14 +61,25 @@
             />
           </v-list>
         </div>
+        <v-alert
+          v-if="enrollError"
+          type="error"
+          class="mb-4"
+          closable
+          @click:close="enrollError = null"
+        >
+          {{ enrollError }}
+        </v-alert>
         <v-btn
           color="primary"
           size="large"
           block
           elevation="0"
+          :loading="isEnrolling"
+          :disabled="isEnrolling || coursesStore.enrolledCourses.includes(courseId)"
           @click="enroll"
         >
-          Записаться на курс
+          {{ coursesStore.enrolledCourses.includes(courseId) ? 'Вы уже записаны на этот курс' : 'Записаться на курс' }}
         </v-btn>
       </v-col>
     </v-row>
@@ -80,10 +91,12 @@ import { computed, ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useCoursesStore } from '@/stores/coursesStore'
 import { getCourseLessons } from '@/services/coursesService'
+import { useCourses } from '@/composables/useCourses'
 
 const route = useRoute()
 const router = useRouter()
 const coursesStore = useCoursesStore()
+const { enrollCourse } = useCourses()
 
 const courseId = route.params.id as string
 const courseLessons = ref<any[]>([])
@@ -97,7 +110,9 @@ const lessons = computed(() => {
 })
 
 const isLoadingLessons = ref(true)
+const isEnrolling = ref(false)
 const loadError = ref<string | null>(null)
+const enrollError = ref<string | null>(null)
 
 onMounted(async () => {
   try {
@@ -124,9 +139,18 @@ const getLevelColor = (level: string) => {
   }
 }
 
-const enroll = () => {
-  coursesStore.enrollCourse(courseId)
-  router.push('/learning')
+const enroll = async () => {
+  enrollError.value = null
+  isEnrolling.value = true
+  try {
+    await enrollCourse(courseId)
+    router.push('/learning')
+  } catch (error: any) {
+    console.error('Failed to enroll in course:', error)
+    enrollError.value = error?.message || 'Не удалось записаться на курс'
+  } finally {
+    isEnrolling.value = false
+  }
 }
 </script>
 
