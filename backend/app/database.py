@@ -2,7 +2,6 @@ from sqlalchemy.ext.asyncio import create_async_engine, AsyncSession, async_sess
 from sqlalchemy.orm import declarative_base
 from app.config import settings
 
-# Create async engine
 engine = create_async_engine(
     settings.DATABASE_URL,
     pool_pre_ping=True,
@@ -12,7 +11,6 @@ engine = create_async_engine(
     echo=False,
 )
 
-# Create async session factory
 AsyncSessionLocal = async_sessionmaker(
     engine,
     class_=AsyncSession,
@@ -21,12 +19,9 @@ AsyncSessionLocal = async_sessionmaker(
     autoflush=False,
 )
 
-# For backward compatibility in seed_data (sync operations)
-# Note: This is only used by seed_data.py which remains synchronous
 from sqlalchemy import create_engine as create_sync_engine
 from sqlalchemy.orm import sessionmaker as sync_sessionmaker
 
-# Create sync engine for migrations and seed data
 sync_database_url = settings.DATABASE_URL.replace("postgresql+asyncpg://", "postgresql://")
 sync_engine = create_sync_engine(
     sync_database_url,
@@ -41,7 +36,6 @@ Base = declarative_base()
 
 
 async def get_db():
-    """Async dependency to get database session"""
     async with AsyncSessionLocal() as session:
         try:
             yield session

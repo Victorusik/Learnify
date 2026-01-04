@@ -42,7 +42,7 @@ class RepetitionData(Base):
     course_id = Column(String, ForeignKey("courses.course_id"), nullable=False)
     last_review = Column(DateTime(timezone=True), nullable=True)
     next_review = Column(DateTime(timezone=True), nullable=True)
-    interval = Column(Integer, default=1)  # дни
+    interval = Column(Integer, default=1)
     ease_factor = Column(Float, default=2.5)
     needs_review = Column(Boolean, default=False)
     mistakes = Column(Integer, default=0)

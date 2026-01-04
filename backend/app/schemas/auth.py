@@ -3,39 +3,33 @@ from typing import Optional
 
 
 class UserRegister(BaseModel):
-    """Schema for user registration"""
     email: EmailStr
     password: str = Field(..., min_length=8, description="Password must be at least 8 characters")
     name: str = Field(..., min_length=1, max_length=100)
 
 
 class UserLogin(BaseModel):
-    """Schema for user login"""
     email: EmailStr
     password: str
 
 
 class TokenResponse(BaseModel):
-    """Schema for token response"""
     access_token: str
     refresh_token: str
     token_type: str = "bearer"
 
 
 class TokenRefresh(BaseModel):
-    """Schema for token refresh request"""
     refresh_token: str
 
 
 class UserUpdate(BaseModel):
-    """Schema for user profile update"""
     name: Optional[str] = Field(None, min_length=1, max_length=100)
     daily_goal: Optional[int] = Field(None, ge=1, le=50)
     selected_categories: Optional[list[str]] = None
 
 
 class UserProfile(BaseModel):
-    """Schema for user profile response"""
     id: int
     email: str
     name: str

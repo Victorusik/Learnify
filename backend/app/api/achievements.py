@@ -14,7 +14,6 @@ DEFAULT_USER_ID = 1
 
 @router.get("/achievements", response_model=List[AchievementResponse])
 async def get_achievements(db: AsyncSession = Depends(get_db)):
-    """Получить список всех достижений с информацией о разблокировке"""
     result = await db.execute(select(Achievement))
     achievements = result.scalars().all()
     
@@ -44,7 +43,6 @@ async def get_achievements(db: AsyncSession = Depends(get_db)):
 
 @router.post("/achievements/{achievement_id}/unlock", response_model=AchievementUnlockResponse)
 async def unlock_achievement(achievement_id: str, db: AsyncSession = Depends(get_db)):
-    """Разблокировать достижение (обычно вызывается автоматически)"""
     result = await db.execute(select(Achievement).filter(Achievement.id == achievement_id))
     achievement = result.scalar_one_or_none()
     if not achievement:

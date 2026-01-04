@@ -1,6 +1,3 @@
-"""
-Скрипт для загрузки начальных данных в базу данных
-"""
 from sqlalchemy.orm import Session
 from app.database import SessionLocal
 from app.models import (

@@ -4,70 +4,48 @@ from sqlalchemy import select
 from app.database import get_db
 from app.models import User, UserStatistics
 from app.schemas.user import UserResponse, UserUpdate, UserStatisticsResponse
+from app.api.auth import get_current_user
 
 router = APIRouter()
 
 
-DEFAULT_USER_ID = 1
-
-
 @router.get("/user", response_model=UserResponse)
-async def get_user(db: AsyncSession = Depends(get_db)):
-    """Получить данные текущего пользователя"""
-    result = await db.execute(select(User).filter(User.id == DEFAULT_USER_ID))
-    user = result.scalar_one_or_none()
-    if not user:
-
-        user = User(
-            id=DEFAULT_USER_ID,
-            name="Алексей",
-            level=12,
-            xp=1245,
-            streak=14,
-            daily_goal=5,
-            completed_today=3,
-            selected_categories=["health", "tech"],
-            notifications=[{"time": "09:00"}, {"time": "19:00"}]
-        )
-        db.add(user)
-        await db.commit()
-        await db.refresh(user)
-    return user
+async def get_user(current_user: User = Depends(get_current_user)):
+    return current_user
 
 
 @router.put("/user", response_model=UserResponse)
-async def update_user(user_update: UserUpdate, db: AsyncSession = Depends(get_db)):
-    """Обновить данные пользователя"""
-    result = await db.execute(select(User).filter(User.id == DEFAULT_USER_ID))
-    user = result.scalar_one_or_none()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
+async def update_user(
+    user_update: UserUpdate,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
     update_data = user_update.model_dump(exclude_unset=True)
     for field, value in update_data.items():
-        setattr(user, field, value)
+        setattr(current_user, field, value)
     
     await db.commit()
-    await db.refresh(user)
-    return user
+    await db.refresh(current_user)
+    return current_user
 
 
 @router.get("/user/statistics", response_model=UserStatisticsResponse)
-async def get_user_statistics(db: AsyncSession = Depends(get_db)):
-    """Получить статистику пользователя"""
+async def get_user_statistics(
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db)
+):
     result = await db.execute(
-        select(UserStatistics).filter(UserStatistics.user_id == DEFAULT_USER_ID)
+        select(UserStatistics).filter(UserStatistics.user_id == current_user.id)
     )
     stats = result.scalar_one_or_none()
     
     if not stats:
-
         stats = UserStatistics(
-            user_id=DEFAULT_USER_ID,
-            total_lessons=156,
-            average_accuracy=87.0,
-            days_learning=45,
-            total_cards_reviewed=1245
+            user_id=current_user.id,
+            total_lessons=0,
+            average_accuracy=0.0,
+            days_learning=0,
+            total_cards_reviewed=0
         )
         db.add(stats)
         await db.commit()

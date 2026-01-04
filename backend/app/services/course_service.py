@@ -5,10 +5,6 @@ from app.models import Course, Lesson, Block, UserCourse, UserProgress
 
 
 async def get_course_progress(db: AsyncSession, user_id: int, course_id: str) -> float:
-    """
-    Рассчитывает прогресс пользователя по курсу в процентах
-    """
-
     result = await db.execute(select(Lesson).filter(Lesson.course_id == course_id))
     lessons = result.scalars().all()
 

@@ -11,7 +11,6 @@ router = APIRouter()
 
 @router.get("/lessons/{lesson_id}", response_model=LessonResponse)
 async def get_lesson(lesson_id: str, db: AsyncSession = Depends(get_db)):
-    """Получить детали урока с блоками"""
     result = await db.execute(select(Lesson).filter(Lesson.id == lesson_id))
     lesson = result.scalar_one_or_none()
     if not lesson:

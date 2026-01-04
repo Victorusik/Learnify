@@ -6,9 +6,6 @@ from typing import List
 
 
 async def check_and_unlock_achievements(db: AsyncSession, user_id: int) -> List[UserAchievement]:
-    """
-    Проверяет условия достижений и разблокирует их при необходимости
-    """
     unlocked = []
     result = await db.execute(select(User).filter(User.id == user_id))
     user = result.scalar_one_or_none()

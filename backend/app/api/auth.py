@@ -20,7 +20,6 @@ async def get_current_user(
     token: str = Depends(oauth2_scheme),
     db: AsyncSession = Depends(get_db)
 ) -> User:
-    """Dependency to get the current authenticated user from JWT token"""
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -35,8 +34,13 @@ async def get_current_user(
     if payload is None:
         raise credentials_exception
     
-    user_id: int = payload.get("sub")
-    if user_id is None:
+    user_id_str = payload.get("sub")
+    if user_id_str is None:
+        raise credentials_exception
+    
+    try:
+        user_id: int = int(user_id_str)
+    except (ValueError, TypeError):
         raise credentials_exception
     
 
@@ -56,16 +60,6 @@ async def get_current_user(
 
 @router.post("/register", response_model=TokenResponse, status_code=status.HTTP_201_CREATED)
 async def register(user_data: UserRegister, db: AsyncSession = Depends(get_db)):
-    """
-    Register a new user.
-    
-    - **email**: User's email address (must be unique)
-    - **password**: User's password (minimum 8 characters)
-    - **name**: User's display name
-    
-    Returns access and refresh tokens upon successful registration.
-    """
-
     result = await db.execute(select(User).filter(User.email == user_data.email))
     existing_user = result.scalar_one_or_none()
     if existing_user:
@@ -116,15 +110,6 @@ async def register(user_data: UserRegister, db: AsyncSession = Depends(get_db)):
 
 @router.post("/login", response_model=TokenResponse)
 async def login(credentials: UserLogin, db: AsyncSession = Depends(get_db)):
-    """
-    Login with email and password.
-    
-    - **email**: User's email address
-    - **password**: User's password
-    
-    Returns access and refresh tokens upon successful authentication.
-    """
-
     result = await db.execute(select(User).filter(User.email == credentials.email))
     user = result.scalar_one_or_none()
     
@@ -179,14 +164,6 @@ async def login(credentials: UserLogin, db: AsyncSession = Depends(get_db)):
 
 @router.post("/refresh", response_model=TokenResponse)
 async def refresh_token(token_data: TokenRefresh, db: AsyncSession = Depends(get_db)):
-    """
-    Refresh access token using a valid refresh token.
-    
-    - **refresh_token**: Valid refresh token
-    
-    Returns a new access token and optionally a new refresh token.
-    """
-
     payload = verify_token(token_data.refresh_token, token_type="refresh")
     if payload is None:
         raise HTTPException(
@@ -195,8 +172,17 @@ async def refresh_token(token_data: TokenRefresh, db: AsyncSession = Depends(get
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-    user_id: int = payload.get("sub")
-    if user_id is None:
+    user_id_str = payload.get("sub")
+    if user_id_str is None:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token payload",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
+    try:
+        user_id: int = int(user_id_str)
+    except (ValueError, TypeError):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid token payload",
@@ -273,11 +259,6 @@ async def refresh_token(token_data: TokenRefresh, db: AsyncSession = Depends(get
 
 @router.get("/profile", response_model=UserProfile)
 async def get_profile(current_user: User = Depends(get_current_user)):
-    """
-    Get current user's profile.
-    
-    Requires a valid access token in the Authorization header.
-    """
     return UserProfile(
         id=current_user.id,
         email=current_user.email,
@@ -299,9 +280,6 @@ async def update_profile(
     current_user: User = Depends(get_current_user),
     db: AsyncSession = Depends(get_db)
 ):
-    """
-    Update current user's profile.
-    """
     if user_update.name is not None:
         current_user.name = user_update.name
     

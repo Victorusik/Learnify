@@ -7,12 +7,6 @@ from app.utils.spaced_repetition import calculate_next_review
 
 
 async def get_cards_for_training(db: AsyncSession, user_id: int, limit: int = 10) -> List[Block]:
-    """
-    Получает карточки для тренировки с приоритетами:
-    1. needs_review = true
-    2. наступило время повторения
-    3. новые карточки
-    """
     now = datetime.utcnow()
     cards: List[Block] = []
     
@@ -81,9 +75,6 @@ async def submit_answer(
     course_id: str,
     is_correct: bool
 ) -> RepetitionData:
-    """
-    Обрабатывает ответ пользователя и обновляет данные spaced repetition
-    """
     result = await db.execute(
         select(RepetitionData).filter(
             and_(

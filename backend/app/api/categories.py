@@ -11,7 +11,6 @@ router = APIRouter()
 
 @router.get("/categories", response_model=List[CategoryResponse])
 async def get_categories(db: AsyncSession = Depends(get_db)):
-    """Получить список всех категорий"""
     result = await db.execute(select(Category))
     categories = result.scalars().all()
     return categories

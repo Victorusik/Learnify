@@ -11,7 +11,7 @@ class Course(Base):
     title = Column(String, nullable=False)
     category_id = Column(String, ForeignKey("categories.id"), nullable=False)
     subcategory = Column(String, nullable=False)
-    level = Column(String, nullable=False)  # 'Легкий', 'Средний', 'Сложный'
+    level = Column(String, nullable=False)
     difficulty_score = Column(Integer, nullable=False)
     estimated_duration_weeks = Column(Integer, nullable=False)
     estimated_duration_hours = Column(Integer, nullable=False)

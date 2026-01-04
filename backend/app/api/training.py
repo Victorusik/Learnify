@@ -13,7 +13,6 @@ DEFAULT_USER_ID = 1
 
 @router.get("/training/cards", response_model=TrainingCardResponse)
 async def get_training_cards(db: AsyncSession = Depends(get_db)):
-    """Получить карточки для тренировки"""
     cards = await get_cards_for_training(db, DEFAULT_USER_ID, limit=10)
     
     block_responses = []
@@ -52,7 +51,6 @@ async def submit_training_answer(
     request: TrainingSubmitRequest,
     db: AsyncSession = Depends(get_db)
 ):
-    """Отправить ответ на карточку"""
     repetition_data = await submit_answer(
         db,
         DEFAULT_USER_ID,

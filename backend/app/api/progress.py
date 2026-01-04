@@ -14,7 +14,6 @@ DEFAULT_USER_ID = 1
 
 @router.get("/progress")
 async def get_progress(db: AsyncSession = Depends(get_db)):
-    """Получить прогресс пользователя по всем курсам"""
     result = await db.execute(
         select(UserProgress).filter(UserProgress.user_id == DEFAULT_USER_ID)
     )
@@ -39,8 +38,6 @@ async def mark_block_completed(
     progress_data: BlockProgressCreate,
     db: AsyncSession = Depends(get_db)
 ):
-    """Отметить блок как выполненный"""
-
     result = await db.execute(
         select(UserProgress).filter(
             UserProgress.user_id == DEFAULT_USER_ID,
@@ -80,8 +77,6 @@ async def mark_lesson_completed(
     progress_data: LessonProgressCreate,
     db: AsyncSession = Depends(get_db)
 ):
-    """Отметить урок как завершенный"""
-
 
     result = await db.execute(
         select(Block).filter(Block.lesson_id == progress_data.lesson_id)

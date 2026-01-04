@@ -6,7 +6,7 @@ from app.config import settings
 from app.api import categories, courses, lessons, user, progress, training, achievements, auth
 from app.middleware.error_handler import GlobalErrorHandler
 from app.database import get_db, Base, engine, AsyncSessionLocal
-from app import models  # Force import of all models
+from app import models
 from app.models import Category
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy import select, text
@@ -30,7 +30,6 @@ async def on_startup():
             if category_count == 0:
                 print("Database is empty, loading seed data...")
                 from app.seed_data import main
-                # Note: seed_data uses sync sessions, which is fine for migrations/seeding
                 main()
                 print("Seed data loaded successfully!")
             else:

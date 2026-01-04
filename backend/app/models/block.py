@@ -8,8 +8,8 @@ class Block(Base):
 
     id = Column(String, primary_key=True, index=True)
     lesson_id = Column(String, ForeignKey("lessons.id"), nullable=False)
-    type = Column(String, nullable=False)  # 'theory' or 'practice'
-    subtype = Column(String, nullable=True)  # 'multiple_choice', 'reflection', 'case', 'text_input'
+    type = Column(String, nullable=False)
+    subtype = Column(String, nullable=True)
     order = Column(Integer, nullable=False)
     title = Column(String, nullable=False)
     content = Column(String, nullable=True)

@@ -17,7 +17,6 @@ async def get_courses(
     category_id: Optional[str] = Query(None),
     db: AsyncSession = Depends(get_db)
 ):
-    """Получить список курсов (с опциональной фильтрацией по категории)"""
     query = select(Course).options(selectinload(Course.category))
 
     if category_id:
@@ -30,7 +29,6 @@ async def get_courses(
 
 @router.get("/courses/{course_id}", response_model=CourseResponse)
 async def get_course(course_id: str, db: AsyncSession = Depends(get_db)):
-    """Получить детали курса"""
     result = await db.execute(
         select(Course)
         .options(selectinload(Course.category))
@@ -48,8 +46,6 @@ async def enroll_course(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Записаться на курс"""
-
     result = await db.execute(
         select(Course)
         .options(selectinload(Course.category))
@@ -90,9 +86,6 @@ async def enroll_course(
 
 @router.get("/courses/{course_id}/lessons", response_model=List[LessonListItem])
 async def get_course_lessons(course_id: str, db: AsyncSession = Depends(get_db)):
-    """Получить уроки курса"""
-
-
     result = await db.execute(select(Course).filter(Course.course_id == course_id))
     course = result.scalar_one_or_none()
     if not course:
@@ -110,7 +103,6 @@ async def get_enrolled_courses(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    """Получить список курсов, на которые записан текущий пользователь"""
     result = await db.execute(
         select(UserCourse).filter(UserCourse.user_id == current_user.id)
     )
@@ -120,7 +112,11 @@ async def get_enrolled_courses(
     if not course_ids:
         return []
 
-    result = await db.execute(select(Course).filter(Course.course_id.in_(course_ids)))
+    result = await db.execute(
+        select(Course)
+        .options(selectinload(Course.category))
+        .filter(Course.course_id.in_(course_ids))
+    )
     courses = result.scalars().all()
     return courses
 
