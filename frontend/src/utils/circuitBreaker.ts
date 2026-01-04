@@ -1,27 +1,23 @@
-/**
- * Реализация паттерна Circuit Breaker
- */
-
 export const CircuitState = {
-  CLOSED: 'CLOSED',      // Нормальная работа
-  OPEN: 'OPEN',          // Разомкнут (ошибки)
-  HALF_OPEN: 'HALF_OPEN' // Тестирование восстановления
+  CLOSED: 'CLOSED',
+  OPEN: 'OPEN',
+  HALF_OPEN: 'HALF_OPEN'
 } as const
 
 export type CircuitState = typeof CircuitState[keyof typeof CircuitState]
 
 export interface CircuitBreakerOptions {
-  failureThreshold?: number      // Порог ошибок для открытия
-  successThreshold?: number       // Порог успехов для закрытия
-  timeout?: number                // Таймаут в OPEN состоянии (мс)
-  resetTimeout?: number           // Время до попытки восстановления (мс)
+  failureThreshold?: number
+  successThreshold?: number
+  timeout?: number
+  resetTimeout?: number
 }
 
 const DEFAULT_OPTIONS: Required<CircuitBreakerOptions> = {
   failureThreshold: 5,
   successThreshold: 2,
-  timeout: 60000,  // 1 минута
-  resetTimeout: 30000  // 30 секунд
+  timeout: 60000,
+  resetTimeout: 30000
 }
 
 export class CircuitBreaker {
@@ -35,9 +31,6 @@ export class CircuitBreaker {
     this.options = { ...DEFAULT_OPTIONS, ...options }
   }
 
-  /**
-   * Выполняет функцию через circuit breaker
-   */
   async execute<T>(fn: () => Promise<T>): Promise<T> {
     this.checkState()
 
@@ -51,9 +44,6 @@ export class CircuitBreaker {
     }
   }
 
-  /**
-   * Проверяет текущее состояние и обновляет его при необходимости
-   */
   private checkState(): void {
     const now = Date.now()
 
@@ -67,9 +57,6 @@ export class CircuitBreaker {
     }
   }
 
-  /**
-   * Обработка успешного выполнения
-   */
   private onSuccess(): void {
     if (this.state === CircuitState.HALF_OPEN) {
       this.successCount++
@@ -83,9 +70,6 @@ export class CircuitBreaker {
     }
   }
 
-  /**
-   * Обработка ошибки
-   */
   private onFailure(): void {
     this.failureCount++
     this.lastFailureTime = Date.now()
@@ -98,16 +82,10 @@ export class CircuitBreaker {
     }
   }
 
-  /**
-   * Получить текущее состояние
-   */
   getState(): CircuitState {
     return this.state
   }
 
-  /**
-   * Сбросить состояние
-   */
   reset(): void {
     this.state = CircuitState.CLOSED
     this.failureCount = 0

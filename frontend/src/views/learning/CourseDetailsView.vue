@@ -100,7 +100,6 @@ const isLoadingLessons = ref(true)
 const loadError = ref<string | null>(null)
 
 onMounted(async () => {
-  // Загружаем уроки курса
   try {
     const lessonsData = await getCourseLessons(courseId)
     courseLessons.value = lessonsData

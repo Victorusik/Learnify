@@ -1,4 +1,3 @@
-// Основные типы курса
 export interface Course {
   type: 'course'
   course_id: string
@@ -27,7 +26,6 @@ export interface Course {
   promo_video_url?: string
 }
 
-// Урок состоит из блоков (карточек)
 export interface Lesson {
   id: string
   course_id: string
@@ -37,12 +35,10 @@ export interface Lesson {
   blocks: Block[]
 }
 
-// Базовый блок (карточка)
 export type Block = TheoryBlock | PracticeBlock
 
-// Теоретическая карточка
 export interface TheoryBlock {
-  id?: string // Optional for backwards compatibility with mock data
+  id?: string
   type: 'theory'
   order: number
   title: string
@@ -51,9 +47,8 @@ export interface TheoryBlock {
   image_url?: string
 }
 
-// Практическая карточка (4 подтипа)
 export interface PracticeBlock {
-  id?: string // Optional for backwards compatibility with mock data
+  id?: string
   type: 'practice'
   subtype: 'multiple_choice' | 'reflection' | 'case' | 'text_input'
   order: number
@@ -69,20 +64,18 @@ export interface PracticeBlock {
   image_url?: string
 }
 
-// Данные для Spaced Repetition
 export interface RepetitionData {
   cardId: string
   lessonId: string
   courseId: string
   lastReview: Date | null
   nextReview: Date | null
-  interval: number // 1, 7, 16, 35 дней
+  interval: number
   easeFactor: number
   needsReview: boolean
   mistakes: number
 }
 
-// Достижение
 export interface Achievement {
   id: string
   title: string
@@ -94,7 +87,6 @@ export interface Achievement {
   maxProgress?: number
 }
 
-// Статистика пользователя
 export interface UserStatistics {
   totalLessons: number
   averageAccuracy: number
@@ -102,14 +94,12 @@ export interface UserStatistics {
   totalCardsReviewed: number
 }
 
-// Категория курса
 export interface Category {
   id: string
   name: string
   icon: string
 }
 
-// Типы для авторизации
 export interface UserRegister {
   email: string
   password: string

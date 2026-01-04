@@ -1,6 +1,5 @@
 import apiClient, { handleApiError } from './api'
 
-// Типы для API запросов и ответов
 export interface BlockProgressCreate {
   block_id: string
   lesson_id: string
@@ -30,9 +29,6 @@ export interface UserProgressResponse {
   progress: ProgressItem[]
 }
 
-/**
- * Получить весь прогресс пользователя
- */
 export const getProgress = async (): Promise<UserProgressResponse> => {
   try {
     const response = await apiClient.get<UserProgressResponse>('/progress')
@@ -42,10 +38,6 @@ export const getProgress = async (): Promise<UserProgressResponse> => {
   }
 }
 
-/**
- * Отметить блок как выполненный
- * @param data - данные о прогрессе блока
- */
 export const markBlockCompleted = async (data: BlockProgressCreate): Promise<ProgressResponse> => {
   try {
     const response = await apiClient.post<ProgressResponse>('/progress/block', data)
@@ -55,10 +47,6 @@ export const markBlockCompleted = async (data: BlockProgressCreate): Promise<Pro
   }
 }
 
-/**
- * Отметить урок как завершенный
- * @param data - данные о прогрессе урока
- */
 export const markLessonCompleted = async (data: LessonProgressCreate): Promise<ProgressResponse> => {
   try {
     const response = await apiClient.post<ProgressResponse>('/progress/lesson', data)

@@ -1,6 +1,5 @@
 import type { Course, Lesson, Category, Achievement } from '@/types'
 
-// Реальные данные курса "Архитектор Времени"
 export const mockCourseData = {
   course: {
     type: 'course',
@@ -540,7 +539,6 @@ export const mockCourseData = {
   ] as Lesson[]
 }
 
-// Категории курсов
 export const mockCategories: Category[] = [
   { id: 'business', name: 'Бизнес и финансы', icon: '💼' },
   { id: 'science', name: 'Наука', icon: '🔬' },
@@ -549,7 +547,6 @@ export const mockCategories: Category[] = [
   { id: 'mindset', name: 'Мышление', icon: '🧠' }
 ]
 
-// Дополнительные моковые курсы
 export const mockAdditionalCourses: Course[] = [
   {
     type: 'course',
@@ -593,7 +590,6 @@ export const mockAdditionalCourses: Course[] = [
   }
 ]
 
-// Достижения
 export const mockAchievements: Achievement[] = [
   {
     id: 'first_step',

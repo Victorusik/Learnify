@@ -1,7 +1,3 @@
-/**
- * Простой кэш для хранения данных в localStorage
- */
-
 interface CacheEntry<T> {
   data: T
   timestamp: number
@@ -15,9 +11,6 @@ export class Cache {
     this.prefix = prefix
   }
 
-  /**
-   * Сохраняет данные в кэш
-   */
   set<T>(key: string, data: T, ttl: number = 3600000): void {
     try {
       const entry: CacheEntry<T> = {
@@ -31,9 +24,6 @@ export class Cache {
     }
   }
 
-  /**
-   * Получает данные из кэша
-   */
   get<T>(key: string): T | null {
     try {
       const item = localStorage.getItem(`${this.prefix}_${key}`)
@@ -42,7 +32,6 @@ export class Cache {
       const entry: CacheEntry<T> = JSON.parse(item)
       const now = Date.now()
 
-      // Проверяем, не истек ли срок действия
       if (now - entry.timestamp > entry.ttl) {
         this.delete(key)
         return null
@@ -55,9 +44,6 @@ export class Cache {
     }
   }
 
-  /**
-   * Удаляет запись из кэша
-   */
   delete(key: string): void {
     try {
       localStorage.removeItem(`${this.prefix}_${key}`)
@@ -66,9 +52,6 @@ export class Cache {
     }
   }
 
-  /**
-   * Очищает весь кэш
-   */
   clear(): void {
     try {
       const keys = Object.keys(localStorage)

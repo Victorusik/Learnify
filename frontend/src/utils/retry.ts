@@ -1,7 +1,3 @@
-/**
- * Утилита для повторных попыток с exponential backoff
- */
-
 export interface RetryOptions {
   maxRetries?: number
   initialDelay?: number
@@ -20,17 +16,11 @@ const DEFAULT_OPTIONS: Required<RetryOptions> = {
   retryableErrors: ['ECONNABORTED', 'ETIMEDOUT', 'ENOTFOUND', 'ECONNRESET']
 }
 
-/**
- * Вычисляет задержку для следующей попытки с exponential backoff
- */
 function calculateDelay(attempt: number, options: Required<RetryOptions>): number {
   const delay = options.initialDelay * Math.pow(options.backoffMultiplier, attempt)
   return Math.min(delay, options.maxDelay)
 }
 
-/**
- * Проверяет, можно ли повторить запрос при данной ошибке
- */
 function isRetryable(error: any, options: Required<RetryOptions>): boolean {
   if (error.response) {
     const status = error.response.status
@@ -49,9 +39,6 @@ function isRetryable(error: any, options: Required<RetryOptions>): boolean {
   return false
 }
 
-/**
- * Выполняет функцию с повторными попытками
- */
 export async function withRetry<T>(
   fn: () => Promise<T>,
   options: RetryOptions = {}
@@ -65,12 +52,10 @@ export async function withRetry<T>(
     } catch (error: any) {
       lastError = error
 
-      // Если это последняя попытка или ошибка не подлежит повтору
       if (attempt === opts.maxRetries || !isRetryable(error, opts)) {
         throw error
       }
 
-      // Вычисляем задержку и ждем
       const delay = calculateDelay(attempt, opts)
       await new Promise(resolve => setTimeout(resolve, delay))
     }

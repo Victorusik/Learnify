@@ -114,7 +114,6 @@ const handleRegister = async () => {
 
   try {
     await userStore.register(email.value, password.value, name.value)
-    // Ждем следующий тик, чтобы токен точно сохранился и computed обновился
     await nextTick()
     router.push('/main')
   } catch (err: any) {

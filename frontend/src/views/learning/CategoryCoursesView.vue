@@ -67,7 +67,6 @@ const categoryName = computed(() => {
 })
 
 const categoryCourses = computed(() => {
-  // Фильтруем курсы по категории
   return coursesStore.availableCourses.filter(course => {
     if (!category.value) return false
     return course.category === category.value.name
@@ -79,14 +78,11 @@ const loadError = ref<string | null>(null)
 
 onMounted(async () => {
   try {
-    // Загружаем категории
     const categoriesData = await getCategories()
     categories.value = categoriesData
 
-    // Загружаем курсы если еще не загружены
     if (coursesStore.availableCourses.length === 0) {
       const coursesResponse = await getCourses()
-      // Transform CourseResponse to Course by converting category object to string
       const courses = coursesResponse.map(course => ({
         ...course,
         category: course.category?.name || 'Без категории'
