@@ -16,14 +16,25 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
+import { useRoute } from 'vue-router'
 import AppNavigation from './components/AppNavigation.vue'
 import { loadUserProgress } from './services/progressLoader'
 import { useCoursesStore } from './stores/coursesStore'
+import { useUserStore } from './stores/userStore'
+import { getAccessToken } from './services/authService'
 
 const coursesStore = useCoursesStore()
+const userStore = useUserStore()
+const route = useRoute()
 const isLoading = ref(true)
 const loadError = ref<string | null>(null)
+
+// Проверяем, является ли текущий роут публичным
+const isPublicRoute = () => {
+  const publicRoutes = ['/login', '/register']
+  return publicRoutes.includes(route.path)
+}
 
 const loadProgress = async () => {
   isLoading.value = true
@@ -41,8 +52,50 @@ const loadProgress = async () => {
   }
 }
 
+const initializeApp = async () => {
+  // Если это публичная страница, не загружаем данные
+  if (isPublicRoute()) {
+    isLoading.value = false
+    return
+  }
+
+  // Ждем следующего тика, чтобы убедиться, что все computed обновились
+  await nextTick()
+
+  // Проверяем авторизацию напрямую через токен (более надежно, чем через computed)
+  const hasToken = getAccessToken() !== null
+
+  if (hasToken) {
+    try {
+      await userStore.fetchProfile()
+    } catch (error: any) {
+      console.error('Ошибка загрузки профиля:', error)
+      // Если ошибка 401, токен невалиден - очистим его и перенаправим
+      if (error?.response?.status === 401) {
+        userStore.logout()
+        isLoading.value = false
+        return
+      }
+      loadError.value = 'Не удалось загрузить профиль пользователя.'
+      isLoading.value = false
+      return
+    }
+  } else {
+    // Если нет токена, не загружаем данные
+    isLoading.value = false
+    return
+  }
+
+  // Загружаем прогресс только если пользователь авторизован и профиль загружен
+  if (userStore.user) {
+    await loadProgress()
+  } else {
+    isLoading.value = false
+  }
+}
+
 onMounted(() => {
-  loadProgress()
+  initializeApp()
 })
 </script>
 

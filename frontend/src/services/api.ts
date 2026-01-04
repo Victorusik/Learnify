@@ -24,11 +24,11 @@ const apiClient: AxiosInstance = axios.create({
 // Интерцептор для обработки запросов
 apiClient.interceptors.request.use(
   (config) => {
-    // Здесь можно добавить токен авторизации в будущем
-    // const token = localStorage.getItem('token')
-    // if (token) {
-    //   config.headers.Authorization = `Bearer ${token}`
-    // }
+    // Добавляем токен авторизации в заголовки
+    const token = localStorage.getItem('access_token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
     return config
   },
   (error) => {
@@ -52,7 +52,15 @@ apiClient.interceptors.response.use(
       switch (status) {
         case 401:
           console.error('Не авторизован')
-          // Здесь можно перенаправить на страницу входа
+          // Очищаем токены
+          localStorage.removeItem('access_token')
+          localStorage.removeItem('refresh_token')
+          // Редирект на логин, если мы не на странице логина/регистрации
+          // Используем router вместо window.location для правильной навигации
+          if (window.location.pathname !== '/login' && window.location.pathname !== '/register') {
+            // Не делаем редирект здесь, пусть router guard обработает это
+            // Просто очищаем токены, router guard перенаправит
+          }
           break
         case 403:
           console.error('Доступ запрещен')

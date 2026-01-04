@@ -26,7 +26,7 @@ app.add_middleware(
 app.add_middleware(GlobalErrorHandler)
 
 # Include routers
-app.include_router(auth.router, prefix=settings.API_V1_PREFIX, tags=["authentication"])
+app.include_router(auth.router, prefix=f"{settings.API_V1_PREFIX}/auth", tags=["authentication"])
 app.include_router(categories.router, prefix=settings.API_V1_PREFIX, tags=["categories"])
 app.include_router(courses.router, prefix=settings.API_V1_PREFIX, tags=["courses"])
 app.include_router(lessons.router, prefix=settings.API_V1_PREFIX, tags=["lessons"])

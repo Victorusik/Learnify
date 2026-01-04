@@ -109,6 +109,38 @@ export interface Category {
   icon: string
 }
 
+// Типы для авторизации
+export interface UserRegister {
+  email: string
+  password: string
+  name: string
+}
+
+export interface UserLogin {
+  email: string
+  password: string
+}
+
+export interface TokenResponse {
+  access_token: string
+  refresh_token: string
+  token_type: string
+}
+
+export interface UserProfile {
+  id: number
+  email: string
+  name: string
+  is_active: boolean
+  level: number
+  xp: number
+  streak: number
+  daily_goal: number
+  completed_today: number
+  selected_categories: string[]
+  notifications: any[]
+}
+
 
 
 

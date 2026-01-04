@@ -1,10 +1,24 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import type { RouteRecordRaw } from 'vue-router'
+import { useUserStore } from '@/stores/userStore'
+import { getAccessToken } from '@/services/authService'
 
 const routes: RouteRecordRaw[] = [
   {
     path: '/',
     redirect: '/main'
+  },
+  {
+    path: '/login',
+    name: 'Login',
+    component: () => import('@/views/LoginView.vue'),
+    meta: { requiresAuth: false }
+  },
+  {
+    path: '/register',
+    name: 'Register',
+    component: () => import('@/views/RegisterView.vue'),
+    meta: { requiresAuth: false }
   },
   {
     path: '/learning',
@@ -51,6 +65,30 @@ const routes: RouteRecordRaw[] = [
 const router = createRouter({
   history: createWebHistory(),
   routes
+})
+
+// Navigation guard для защиты приватных роутов
+router.beforeEach((to, from, next) => {
+  // Проверяем токен напрямую из localStorage (более надежно, чем через computed)
+  const hasToken = getAccessToken() !== null
+
+  // Публичные роуты (логин и регистрация)
+  const publicRoutes = ['/login', '/register']
+  const isPublicRoute = publicRoutes.includes(to.path)
+
+  // Если пользователь авторизован и пытается зайти на страницу логина/регистрации
+  if (hasToken && isPublicRoute) {
+    next('/main')
+    return
+  }
+
+  // Если пользователь не авторизован и пытается зайти на приватную страницу
+  if (!hasToken && !isPublicRoute) {
+    next('/login')
+    return
+  }
+
+  next()
 })
 
 export default router

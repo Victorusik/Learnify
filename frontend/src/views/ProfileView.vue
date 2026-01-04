@@ -102,15 +102,32 @@
         </v-card>
       </v-col>
     </v-row>
+    <v-row>
+      <v-col cols="12">
+        <v-card class="border-radius-large box-shadow-1 pa-4">
+          <v-btn
+            color="error"
+            variant="outlined"
+            block
+            prepend-icon="mdi-logout"
+            @click="handleLogout"
+          >
+            Выйти
+          </v-btn>
+        </v-card>
+      </v-col>
+    </v-row>
   </v-container>
 </template>
 
 <script setup lang="ts">
 import { ref, computed } from 'vue'
+import { useRouter } from 'vue-router'
 import { useUserStore } from '@/stores/userStore'
 import { useAchievementsStore } from '@/stores/achievementsStore'
 import { mockCategories } from '@/mocks/mockData'
 
+const router = useRouter()
 const userStore = useUserStore()
 const achievementsStore = useAchievementsStore()
 
@@ -136,6 +153,11 @@ const updateDailyGoal = (value: number) => {
 
 const toggleCategory = (categoryId: string) => {
   userStore.toggleCategory(categoryId)
+}
+
+const handleLogout = () => {
+  userStore.logout()
+  router.push('/login')
 }
 </script>
 

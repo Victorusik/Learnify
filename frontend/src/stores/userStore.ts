@@ -1,16 +1,23 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { format } from 'date-fns'
+import type { UserProfile } from '@/types'
+import * as authService from '@/services/authService'
 
 export const useUserStore = defineStore('user', () => {
-  const name = ref('Алексей')
-  const level = ref(1)
-  const xp = ref(0)
-  const streak = ref(1)
-  const dailyGoal = ref(5)
-  const completedToday = ref(0)
-  const selectedCategories = ref<string[]>(['health', 'tech'])
+  const user = ref<UserProfile | null>(null)
   const lastStreakUpdateDate = ref<string | null>(null)
+
+  // Computed свойства на основе данных пользователя
+  const name = computed(() => user.value?.name || '')
+  const level = computed(() => user.value?.level || 1)
+  const xp = computed(() => user.value?.xp || 0)
+  const streak = computed(() => user.value?.streak || 0)
+  const dailyGoal = computed(() => user.value?.daily_goal || 5)
+  const completedToday = computed(() => user.value?.completed_today || 0)
+  const selectedCategories = computed(() => user.value?.selected_categories || [])
+
+  const isAuthenticated = computed(() => authService.isAuthenticated())
 
 
   const xpToNextLevel = computed(() => {
@@ -26,49 +33,89 @@ export const useUserStore = defineStore('user', () => {
   })
 
   const addXP = (amount: number) => {
-    xp.value += amount
-    const newLevel = Math.floor(xp.value / 100) + 1
-    if (newLevel > level.value) {
-      level.value = newLevel
+    if (!user.value) return
+    user.value.xp += amount
+    const newLevel = Math.floor(user.value.xp / 100) + 1
+    if (newLevel > user.value.level) {
+      user.value.level = newLevel
     }
   }
 
   const updateDailyGoal = (goal: number) => {
-    dailyGoal.value = goal
+    if (!user.value) return
+    user.value.daily_goal = goal
   }
 
   const toggleCategory = (categoryId: string) => {
-    const index = selectedCategories.value.indexOf(categoryId)
+    if (!user.value) return
+    const index = user.value.selected_categories.indexOf(categoryId)
     if (index > -1) {
-      selectedCategories.value.splice(index, 1)
+      user.value.selected_categories.splice(index, 1)
     } else {
-      selectedCategories.value.push(categoryId)
+      user.value.selected_categories.push(categoryId)
     }
   }
 
   const incrementStreak = () => {
-    streak.value += 1
+    if (!user.value) return
+    user.value.streak += 1
     lastStreakUpdateDate.value = format(new Date(), 'yyyy-MM-dd')
   }
 
   const resetStreak = () => {
-    streak.value = 0
+    if (!user.value) return
+    user.value.streak = 0
   }
 
   const incrementCompletedToday = () => {
-    completedToday.value += 1
+    if (!user.value) return
+
+    user.value.completed_today += 1
 
     // Проверяем, достигнута ли цель и не был ли стрик уже увеличен сегодня
     const today = format(new Date(), 'yyyy-MM-dd')
     const wasStreakUpdatedToday = lastStreakUpdateDate.value === today
 
-    if (completedToday.value >= dailyGoal.value && !wasStreakUpdatedToday) {
+    if (user.value.completed_today >= user.value.daily_goal && !wasStreakUpdatedToday) {
       incrementStreak()
       lastStreakUpdateDate.value = today
     }
   }
 
+  // Методы авторизации
+  const login = async (email: string, password: string) => {
+    await authService.login(email, password)
+    // Профиль загрузится автоматически в App.vue после редиректа
+  }
+
+  const register = async (email: string, password: string, name: string) => {
+    await authService.register(email, password, name)
+    // Профиль загрузится автоматически в App.vue после редиректа
+  }
+
+  const logout = () => {
+    authService.logout()
+    user.value = null
+    lastStreakUpdateDate.value = null
+  }
+
+  const fetchProfile = async () => {
+    if (!authService.isAuthenticated()) {
+      user.value = null
+      return
+    }
+
+    try {
+      const profile = await authService.getProfile()
+      user.value = profile
+    } catch (error) {
+      console.error('Ошибка загрузки профиля:', error)
+      user.value = null
+    }
+  }
+
   return {
+    user,
     name,
     level,
     xp,
@@ -77,6 +124,7 @@ export const useUserStore = defineStore('user', () => {
     completedToday,
     selectedCategories,
     lastStreakUpdateDate,
+    isAuthenticated,
     xpToNextLevel,
     xpProgress,
     addXP,
@@ -84,7 +132,11 @@ export const useUserStore = defineStore('user', () => {
     toggleCategory,
     incrementStreak,
     resetStreak,
-    incrementCompletedToday
+    incrementCompletedToday,
+    login,
+    register,
+    logout,
+    fetchProfile
   }
 })
 

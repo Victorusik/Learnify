@@ -1,5 +1,6 @@
 <template>
   <v-bottom-navigation
+    v-if="showNavigation"
     :model-value="activeTab"
     @update:model-value="navigate"
     class="app-navigation"
@@ -39,6 +40,11 @@ const activeTab = computed(() => {
   if (route.path === '/achievements') return 'achievements'
   if (route.path === '/profile') return 'profile'
   return 'training'
+})
+
+const showNavigation = computed(() => {
+  const publicRoutes = ['/login', '/register']
+  return !publicRoutes.includes(route.path)
 })
 
 const navigate = (value: string) => {
