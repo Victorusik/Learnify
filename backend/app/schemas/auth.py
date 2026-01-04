@@ -27,6 +27,13 @@ class TokenRefresh(BaseModel):
     refresh_token: str
 
 
+class UserUpdate(BaseModel):
+    """Schema for user profile update"""
+    name: Optional[str] = Field(None, min_length=1, max_length=100)
+    daily_goal: Optional[int] = Field(None, ge=1, le=50)
+    selected_categories: Optional[list[str]] = None
+
+
 class UserProfile(BaseModel):
     """Schema for user profile response"""
     id: int
@@ -43,6 +50,10 @@ class UserProfile(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+
+
 
 
 

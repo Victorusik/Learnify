@@ -3,6 +3,7 @@ from typing import Optional, List
 
 
 class TheoryBlockResponse(BaseModel):
+    id: str
     type: str = "theory"
     order: int
     title: str
@@ -14,6 +15,7 @@ class TheoryBlockResponse(BaseModel):
 
 
 class PracticeBlockResponse(BaseModel):
+    id: str
     type: str = "practice"
     subtype: str
     order: int

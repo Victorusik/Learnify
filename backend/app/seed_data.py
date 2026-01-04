@@ -6,6 +6,7 @@ from app.database import SessionLocal
 from app.models import (
     Category, Course, Lesson, Block, Achievement, User, UserStatistics
 )
+from app.utils.password import hash_password
 from datetime import datetime
 
 
@@ -243,6 +244,8 @@ def seed_default_user(db: Session):
     if not existing:
         user = User(
             id=1,
+            email="test@example.com",
+            hashed_password=hash_password("password123"),
             name="Алексей",
             level=12,
             xp=1245,

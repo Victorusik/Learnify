@@ -5,13 +5,20 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.api import categories, courses, lessons, user, progress, training, achievements, auth
 from app.middleware.error_handler import GlobalErrorHandler
-from app.database import get_db
+from app.database import get_db, Base, engine
+from app import models  # Force import of all models
 from sqlalchemy.orm import Session
 from sqlalchemy import text
 from fastapi import Depends, status, Response
 
 
 app = FastAPI(title="Learnify API", version="1.0.0")
+
+@app.on_event("startup")
+def on_startup():
+    # Create all tables
+    Base.metadata.create_all(bind=engine)
+
 
 # CORS
 app.add_middleware(

@@ -17,7 +17,7 @@ class Settings(BaseSettings):
     CORS_ORIGINS: List[str] = ["http://localhost:3000", "http://frontend:80", "http://localhost:5173"]
     
     # JWT Settings
-    SECRET_KEY: str = secrets.token_urlsafe(32) 
+    SECRET_KEY: str = "super-secret-key-for-dev" 
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15 
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30 

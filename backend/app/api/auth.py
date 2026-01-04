@@ -4,7 +4,7 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 from app.database import get_db
 from app.models import User, RefreshToken
-from app.schemas.auth import UserRegister, UserLogin, TokenResponse, TokenRefresh, UserProfile
+from app.schemas.auth import UserRegister, UserLogin, TokenResponse, TokenRefresh, UserProfile, UserUpdate
 from app.utils.password import hash_password, verify_password
 from app.utils.jwt import create_access_token, create_refresh_token, verify_token
 from app.config import settings
@@ -88,11 +88,11 @@ def register(user_data: UserRegister, db: Session = Depends(get_db)):
     # Create tokens
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": new_user.id, "email": new_user.email},
+        data={"sub": str(new_user.id), "email": new_user.email},
         expires_delta=access_token_expires
     )
     
-    refresh_token = create_refresh_token(data={"sub": new_user.id, "email": new_user.email})
+    refresh_token = create_refresh_token(data={"sub": str(new_user.id), "email": new_user.email})
     
     # Store refresh token in database
     refresh_token_expires = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
@@ -150,11 +150,11 @@ def login(credentials: UserLogin, db: Session = Depends(get_db)):
     # Create tokens
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.id, "email": user.email},
+        data={"sub": str(user.id), "email": user.email},
         expires_delta=access_token_expires
     )
     
-    refresh_token = create_refresh_token(data={"sub": user.id, "email": user.email})
+    refresh_token = create_refresh_token(data={"sub": str(user.id), "email": user.email})
     
     # Store refresh token in database
     refresh_token_expires = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
@@ -236,12 +236,12 @@ def refresh_token(token_data: TokenRefresh, db: Session = Depends(get_db)):
     # Create new access token
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        data={"sub": user.id, "email": user.email},
+        data={"sub": str(user.id), "email": user.email},
         expires_delta=access_token_expires
     )
     
     # Optionally create a new refresh token (rotate refresh tokens for better security)
-    new_refresh_token = create_refresh_token(data={"sub": user.id, "email": user.email})
+    new_refresh_token = create_refresh_token(data={"sub": str(user.id), "email": user.email})
     
     # Revoke old refresh token
     db_refresh_token.is_revoked = True
@@ -284,4 +284,43 @@ def get_profile(current_user: User = Depends(get_current_user)):
         selected_categories=current_user.selected_categories or [],
         notifications=current_user.notifications or []
     )
+
+
+@router.put("/profile", response_model=UserProfile)
+def update_profile(
+    user_update: UserUpdate,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """
+    Update current user's profile.
+    """
+    if user_update.name is not None:
+        current_user.name = user_update.name
+    
+    if user_update.daily_goal is not None:
+        current_user.daily_goal = user_update.daily_goal
+        
+    if user_update.selected_categories is not None:
+        current_user.selected_categories = user_update.selected_categories
+    
+    db.commit()
+    db.refresh(current_user)
+    
+    return UserProfile(
+        id=current_user.id,
+        email=current_user.email,
+        name=current_user.name,
+        is_active=current_user.is_active,
+        level=current_user.level,
+        xp=current_user.xp,
+        streak=current_user.streak,
+        daily_goal=current_user.daily_goal,
+        completed_today=current_user.completed_today,
+        selected_categories=current_user.selected_categories or [],
+        notifications=current_user.notifications or []
+    )
+
+
+
 

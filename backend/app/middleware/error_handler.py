@@ -19,9 +19,7 @@ class GlobalErrorHandler(BaseHTTPMiddleware):
         error_content = {"message": "Internal Server Error", "detail": str(exc)}
         status_code = status.HTTP_500_INTERNAL_SERVER_ERROR
 
-        if isinstance(exc, integrity_error_handler):
-             # Handled separately if needed, but below covers generic SQLAlchemy
-             pass
+
 
         if isinstance(exc, OperationalError):
             logger.error(f"Database Operational Error: {exc}")

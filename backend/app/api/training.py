@@ -20,6 +20,7 @@ def get_training_cards(db: Session = Depends(get_db)):
     for block in cards:
         if block.type == "theory":
             block_responses.append(TheoryBlockResponse(
+                id=block.id,
                 type=block.type,
                 order=block.order,
                 title=block.title,
@@ -28,6 +29,7 @@ def get_training_cards(db: Session = Depends(get_db)):
             ))
         else:
             block_responses.append(PracticeBlockResponse(
+                id=block.id,
                 type=block.type,
                 subtype=block.subtype or "",
                 order=block.order,
