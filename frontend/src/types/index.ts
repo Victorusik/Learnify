@@ -131,6 +131,12 @@ export interface UserProfile {
   notifications: any[]
 }
 
+export interface UserUpdate {
+  name?: string
+  daily_goal?: number
+  selected_categories?: string[]
+}
+
 
 
 

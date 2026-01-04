@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { format } from 'date-fns'
-import type { UserProfile } from '@/types'
+import type { UserProfile, UserUpdate } from '@/types'
 import * as authService from '@/services/authService'
 
 export const useUserStore = defineStore('user', () => {
@@ -40,18 +40,30 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
-  const updateDailyGoal = (goal: number) => {
+  const updateDailyGoal = async (goal: number) => {
     if (!user.value) return
-    user.value.daily_goal = goal
+    try {
+      await updateProfile({ daily_goal: goal })
+    } catch (error) {
+      console.error('Ошибка обновления ежедневной цели:', error)
+      throw error
+    }
   }
 
-  const toggleCategory = (categoryId: string) => {
+  const toggleCategory = async (categoryId: string) => {
     if (!user.value) return
-    const index = user.value.selected_categories.indexOf(categoryId)
+    const currentCategories = [...user.value.selected_categories]
+    const index = currentCategories.indexOf(categoryId)
     if (index > -1) {
-      user.value.selected_categories.splice(index, 1)
+      currentCategories.splice(index, 1)
     } else {
-      user.value.selected_categories.push(categoryId)
+      currentCategories.push(categoryId)
+    }
+    try {
+      await updateProfile({ selected_categories: currentCategories })
+    } catch (error) {
+      console.error('Ошибка обновления категорий:', error)
+      throw error
     }
   }
 
@@ -109,6 +121,21 @@ export const useUserStore = defineStore('user', () => {
     }
   }
 
+  const updateProfile = async (userUpdate: UserUpdate) => {
+    if (!authService.isAuthenticated()) {
+      throw new Error('Пользователь не авторизован')
+    }
+
+    try {
+      const updatedProfile = await authService.updateProfile(userUpdate)
+      user.value = updatedProfile
+      return updatedProfile
+    } catch (error) {
+      console.error('Ошибка обновления профиля:', error)
+      throw error
+    }
+  }
+
   return {
     user,
     name,
@@ -131,7 +158,8 @@ export const useUserStore = defineStore('user', () => {
     login,
     register,
     logout,
-    fetchProfile
+    fetchProfile,
+    updateProfile
   }
 })
 

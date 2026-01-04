@@ -1,5 +1,5 @@
 import apiClient from './api'
-import type { UserRegister, UserLogin, TokenResponse, UserProfile } from '@/types'
+import type { UserRegister, UserLogin, TokenResponse, UserProfile, UserUpdate } from '@/types'
 
 const ACCESS_TOKEN_KEY = 'access_token'
 const REFRESH_TOKEN_KEY = 'refresh_token'
@@ -75,6 +75,11 @@ export async function refreshToken(): Promise<TokenResponse | null> {
 
 export async function getProfile(): Promise<UserProfile> {
   const response = await apiClient.get<UserProfile>('/auth/profile')
+  return response.data
+}
+
+export async function updateProfile(userUpdate: UserUpdate): Promise<UserProfile> {
+  const response = await apiClient.put<UserProfile>('/auth/profile', userUpdate)
   return response.data
 }
 

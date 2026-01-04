@@ -134,7 +134,7 @@ const achievementsStore = useAchievementsStore()
 const dailyGoal = ref(userStore.dailyGoal)
 const notificationsEnabled = ref(true)
 const categories = mockCategories
-
+const isUpdating = ref(false)
 
 const getCategoryIcon = (categoryId: string): string => {
   const iconMap: Record<string, string> = {
@@ -147,12 +147,30 @@ const getCategoryIcon = (categoryId: string): string => {
   return iconMap[categoryId] || 'mdi-book'
 }
 
-const updateDailyGoal = (value: number) => {
-  userStore.updateDailyGoal(value)
+const updateDailyGoal = async (value: number) => {
+  if (isUpdating.value) return
+  isUpdating.value = true
+  try {
+    await userStore.updateDailyGoal(value)
+    dailyGoal.value = value
+  } catch (error) {
+    console.error('Ошибка обновления ежедневной цели:', error)
+    dailyGoal.value = userStore.dailyGoal
+  } finally {
+    isUpdating.value = false
+  }
 }
 
-const toggleCategory = (categoryId: string) => {
-  userStore.toggleCategory(categoryId)
+const toggleCategory = async (categoryId: string) => {
+  if (isUpdating.value) return
+  isUpdating.value = true
+  try {
+    await userStore.toggleCategory(categoryId)
+  } catch (error) {
+    console.error('Ошибка обновления категорий:', error)
+  } finally {
+    isUpdating.value = false
+  }
 }
 
 const handleLogout = () => {
